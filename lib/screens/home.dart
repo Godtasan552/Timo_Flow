@@ -226,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _fabModeButton(context, TaskType.even, Colors.pink[200]!),
-          _fabModeButton(context, TaskType.work, Colors.purple[200]!),
+          _fabModeButton(context, TaskType.goal, Colors.purple[200]!),
           _fabModeButton(context, TaskType.birthday, Colors.blue[200]!),
         ],
       ),

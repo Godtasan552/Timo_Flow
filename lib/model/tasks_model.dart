@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum TaskType { even, work, birthday, goal }
+enum TaskType { even, goal, birthday }
 
 class Task {
   final String id;

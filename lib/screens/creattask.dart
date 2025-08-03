@@ -118,7 +118,7 @@ class _CreatTaskPageState extends State<CreatTaskPage> {
                   child: SwitchListTile(
                     title: const Text('Focus Mode'),
                     value: _focusMode,
-                    onChanged: (_selectedType == TaskType.work)
+                    onChanged: (_selectedType == TaskType.goal)
                         ? (val) {
                             setState(() {
                               _focusMode = val;
