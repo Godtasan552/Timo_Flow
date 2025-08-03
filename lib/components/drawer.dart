@@ -20,8 +20,16 @@ class _MyDrawerState extends State<MyDrawer> {
         padding: EdgeInsets.zero,
         children: [
           const DrawerHeader(
-            decoration: BoxDecoration(color: Color.fromARGB(255, 67, 255, 183)),
-            child: Text('Drawer Header'),
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 246, 232, 255),
+            ),
+            child: Text(
+              'Timo Flow',
+              style: TextStyle(
+                fontSize: 24,
+                color: Color.fromARGB(255, 0, 0, 0),
+              ),
+            ),
           ),
           ListTile(
             title: const Text('Home'),
