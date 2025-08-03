@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/navigation_helper.dart';
+import 'home.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -38,6 +39,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // แสดงผลสำเร็จ
       NavigationHelper.showSuccessSnackBar('เข้าสู่ระบบสำเร็จ');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
 
       // นำทางไปหน้า Home (ถ้ามี) หรือแสดงข้อความ
       // NavigationHelper.toHome();
