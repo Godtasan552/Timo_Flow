@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import '../components/drawer.dart';
-import 'package:intl/intl.dart';
 import 'package:get/get.dart';
-import 'alltask.dart';
+import 'package:intl/intl.dart';
+import '../controllers/task_controller.dart';
+import '../components/drawer.dart';
 import 'creattask.dart';
+import 'task_detail.dart';
+import '../model/tasks_model.dart'; // เพิ่มบรรทัดนี้
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,16 +15,21 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  DateTime _selectedMonth = DateTime.now();
+  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
+  DateTime? _selectedDay;
+  final TaskController _taskController = Get.put(TaskController());
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDay = DateTime.now();
+    // โหลด tasks ของ user ที่ login
+    // _taskController.loadTasksForUser(userId);
+  }
 
   @override
   Widget build(BuildContext context) {
-    // คำนวณจำนวนวันในเดือน
-    final int daysInMonth = DateTime(
-      _selectedMonth.year,
-      _selectedMonth.month + 1,
-      0,
-    ).day;
+    final int daysInMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).day;
 
     return Scaffold(
       drawer: const MyDrawer(),
@@ -31,95 +38,101 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
         title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              'Timo Flow',
-              style: TextStyle(
-                color: Colors.pinkAccent,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
+            IconButton(
+              icon: const Icon(Icons.arrow_left),
+              onPressed: () {
+                setState(() {
+                  _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1, 1);
+                });
+              },
+            ),
+            Expanded(
+              child: Center(
+                child: DropdownButton<DateTime>(
+                  value: _selectedMonth,
+                  underline: const SizedBox(),
+                  items: List.generate(12, (i) {
+                    final date = DateTime(DateTime.now().year, i + 1);
+                    return DropdownMenuItem(
+                      value: date,
+                      child: Text(DateFormat.yMMMM().format(date)),
+                    );
+                  }),
+                  onChanged: (date) {
+                    if (date != null) setState(() => _selectedMonth = date);
+                  },
+                ),
               ),
             ),
-            const SizedBox(width: 8),
-            const Spacer(),
-            const Icon(Icons.person, color: Colors.pinkAccent),
-            const SizedBox(width: 16),
+            IconButton(
+              icon: const Icon(Icons.arrow_right),
+              onPressed: () {
+                setState(() {
+                  _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+                });
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                // ไปหน้า search/filter
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.check_box),
+              onPressed: () {
+                // ไปหน้า Task Completion Toggle
+              },
+            ),
           ],
         ),
         centerTitle: true,
       ),
-      body: Column(
+      body: Row(
         children: [
-          // ปฏิทิน
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+          // Calendar (ซ้าย)
+          Expanded(
+            flex: 1,
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Card(
                 child: Column(
                   children: [
-                    // แถวเดือน
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_left),
-                          onPressed: () {
-                            setState(() {
-                              _selectedMonth = DateTime(
-                                _selectedMonth.year,
-                                _selectedMonth.month - 1,
-                              );
-                            });
-                          },
-                        ),
-                        Text(
-                          DateFormat.yMMMM().format(_selectedMonth),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.arrow_right),
-                          onPressed: () {
-                            setState(() {
-                              _selectedMonth = DateTime(
-                                _selectedMonth.year,
-                                _selectedMonth.month + 1,
-                              );
-                            });
-                          },
-                        ),
-                      ],
+                    const SizedBox(height: 8),
+                    Text(
+                      DateFormat.yMMMM().format(_selectedMonth),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
-                    // ตารางวัน
                     Wrap(
                       alignment: WrapAlignment.center,
-                      spacing: 12,
-                      runSpacing: 12,
+                      spacing: 8,
+                      runSpacing: 8,
                       children: List.generate(daysInMonth, (index) {
                         final day = index + 1;
-                        return Container(
-                          width: 40,
-                          height: 40,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey[300]!),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '$day',
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w500,
+                        final isSelected = _selectedDay?.day == day &&
+                            _selectedDay?.month == _selectedMonth.month &&
+                            _selectedDay?.year == _selectedMonth.year;
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedDay = DateTime(_selectedMonth.year, _selectedMonth.month, day);
+                            });
+                          },
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.pink[100] : Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isSelected ? Colors.pinkAccent : Colors.grey[300]!,
+                                width: 2,
+                              ),
                             ),
+                            child: Text('$day'),
                           ),
                         );
                       }),
@@ -129,55 +142,113 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          // All Tasks Header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'All Tasks',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.menu),
-                  onPressed: () {
-                    Get.to(() => const AllTaskPage());
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          // ตัวอย่าง Task Card
+          // Tasks (ขวา)
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: 5,
-              itemBuilder: (context, index) => Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ListTile(
-                  leading: const Icon(Icons.check_circle_outline),
-                  title: Text('Task ${index + 1}'),
-                  subtitle: const Text('9:00 AM'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {},
-                ),
-              ),
-            ),
+            flex: 2,
+            child: Obx(() {
+              final tasks = _selectedDay == null
+                  ? []
+                  : _taskController.filterByDate(_selectedDay!);
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Tasks', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                        IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () {
+                            // ไปหน้า All Task
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: tasks.isEmpty
+                        ? const Center(child: Text('No tasks for this day'))
+                        : ListView.builder(
+                            itemCount: tasks.length,
+                            itemBuilder: (context, index) {
+                              final task = tasks[index];
+                              return Card(
+                                color: task.type == TaskType.birthday
+                                    ? Colors.blue[50]
+                                    : task.type == TaskType.even
+                                        ? Colors.pink[50]
+                                        : Colors.purple[50],
+                                child: ListTile(
+                                  title: Text(task.title),
+                                  subtitle: Text(task.description ?? ''),
+                                  trailing: Text(
+                                    task.startTime != null
+                                        ? '${task.startTime!.hour.toString().padLeft(2, '0')}:${task.startTime!.minute.toString().padLeft(2, '0')}'
+                                        : '',
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  onTap: () {
+                                    // ไปหน้า Task Detail
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              );
+            }),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Get.to(() => const CreatTaskPage());
-        },
-        backgroundColor: Colors.pinkAccent,
-        child: const Icon(Icons.add),
+      floatingActionButton: _buildFAB(context),
+    );
+  }
+
+  Widget _buildFAB(BuildContext context) {
+    return FloatingActionButton(
+      backgroundColor: Colors.pinkAccent,
+      child: const Icon(Icons.add),
+      onPressed: () {
+        showModalBottomSheet(
+          context: context,
+          builder: (_) => _buildFABMenu(context),
+        );
+      },
+    );
+  }
+
+  Widget _buildFABMenu(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _fabModeButton(context, TaskType.even, Colors.pink[200]!),
+          _fabModeButton(context, TaskType.work, Colors.purple[200]!),
+          _fabModeButton(context, TaskType.birthday, Colors.blue[200]!),
+        ],
       ),
+    );
+  }
+
+  Widget _fabModeButton(BuildContext context, TaskType type, Color color) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FloatingActionButton(
+          heroTag: type.name,
+          backgroundColor: color,
+          child: Text(type.name[0].toUpperCase()),
+          onPressed: () {
+            Navigator.pop(context);
+            Get.to(() => CreatTaskPage(initialType: type));
+          },
+        ),
+        const SizedBox(height: 8),
+        Text(type.name),
+      ],
     );
   }
 }
