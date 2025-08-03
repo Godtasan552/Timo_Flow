@@ -28,15 +28,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final int daysInMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).day;
+Widget build(BuildContext context) {
+  final int daysInMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).day;
 
-    return Scaffold(
-      drawer: const MyDrawer(),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+  return Scaffold(
+    drawer: const MyDrawer(),
+    appBar: AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      iconTheme: const IconThemeData(color: Colors.black),
         title: Row(
           children: [
             IconButton(
@@ -89,62 +89,58 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         centerTitle: true,
       ),
-      body: Row(
+      body: Column(
         children: [
-          // Calendar (ซ้าย)
-          Expanded(
-            flex: 1,
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Card(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 8),
-                    Text(
-                      DateFormat.yMMMM().format(_selectedMonth),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: List.generate(daysInMonth, (index) {
-                        final day = index + 1;
-                        final isSelected = _selectedDay?.day == day &&
-                            _selectedDay?.month == _selectedMonth.month &&
-                            _selectedDay?.year == _selectedMonth.year;
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedDay = DateTime(_selectedMonth.year, _selectedMonth.month, day);
-                            });
-                          },
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: isSelected ? Colors.pink[100] : Colors.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: isSelected ? Colors.pinkAccent : Colors.grey[300]!,
-                                width: 2,
-                              ),
+          // Calendar (บน
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Card(
+              child: Column(
+                children: [
+                  const SizedBox(height: 8),
+                  Text(
+                    DateFormat.yMMMM().format(_selectedMonth),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: List.generate(daysInMonth, (index) {
+                      final day = index + 1;
+                      final isSelected = _selectedDay?.day == day &&
+                          _selectedDay?.month == _selectedMonth.month &&
+                          _selectedDay?.year == _selectedMonth.year;
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedDay = DateTime(_selectedMonth.year, _selectedMonth.month, day);
+                          });
+                        },
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.pink[100] : Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected ? Colors.pinkAccent : Colors.grey[300]!,
+                              width: 2,
                             ),
-                            child: Text('$day'),
                           ),
-                        );
-                      }),
-                    ),
-                  ],
-                ),
+                          child: Text('$day'),
+                        ),
+                      );
+                    }),
+                  ),
+                ],
               ),
             ),
           ),
-          // Tasks (ขวา)
+          // Tasks (ล่าง)
           Expanded(
-            flex: 2,
             child: Obx(() {
               final tasks = _selectedDay == null
                   ? []
@@ -205,6 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: _buildFAB(context),
     );
   }
+
 
   Widget _buildFAB(BuildContext context) {
     return FloatingActionButton(
