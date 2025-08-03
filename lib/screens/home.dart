@@ -3,6 +3,7 @@ import '../components/drawer.dart';
 import 'package:intl/intl.dart';
 import 'package:get/get.dart';
 import 'alltask.dart';
+import 'creattask.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -171,7 +172,9 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Get.to(() => const CreatTaskPage());
+        },
         backgroundColor: Colors.pinkAccent,
         child: const Icon(Icons.add),
       ),
