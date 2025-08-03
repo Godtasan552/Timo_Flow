@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import '../utils/navigation_helper.dart';
+import 'package:get/get.dart';
+import '../controllers/auth_controller.dart';
+import '../controllers/task_controller.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,6 +16,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final AuthController _authController = Get.put(AuthController());
+  final TaskController _taskController = Get.put(TaskController());
+
   bool _obscurePassword = true;
   bool _isLoading = false;
 
@@ -24,35 +31,32 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // จำลองการ Login
   Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() {
       _isLoading = true;
     });
 
-    try {
-      // จำลองการเรียก API
-      await Future.delayed(const Duration(seconds: 2));
+    final success = await _authController.login(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
 
-      // แสดงผลสำเร็จ
-      NavigationHelper.showSuccessSnackBar('เข้าสู่ระบบสำเร็จ');
+    if (success) {
+      await _taskController.loadTasksForUser(_authController.currentUser.value!.id);
+      NavigationHelper.toHome();
+    } else {
+      NavigationHelper.showErrorSnackBar('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+    }
 
-      // นำทางไปหน้า Home (ถ้ามี) หรือแสดงข้อความ
-      // NavigationHelper.toHome();
-    } catch (e) {
-      NavigationHelper.showErrorSnackBar(
-        'เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง',
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {

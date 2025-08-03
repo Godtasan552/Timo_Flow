@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/navigation_helper.dart';
+import 'package:get/get.dart';
+import '../controllers/auth_controller.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -15,6 +17,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final AuthController _authController = Get.put(AuthController());
+
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -47,15 +51,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      // จำลองการเรียก API
-      await Future.delayed(const Duration(seconds: 2));
+      // เรียก AuthController register
+      final success = await _authController.register(
+        email: _emailController.text.trim(),
+        username: _emailController.text.trim(), // ถ้ามี field username ให้เปลี่ยนตรงนี้
+        password: _passwordController.text,
+        firstName: _firstNameController.text,
+        lastName: _lastNameController.text,
+      );
 
-      // แสดงผลสำเร็จ
-      NavigationHelper.showSuccessSnackBar('สมัครสมาชิกสำเร็จ');
-
-      // กลับไปหน้า Login
-      await Future.delayed(const Duration(milliseconds: 1500));
-      NavigationHelper.offNamed('/login');
+      if (success) {
+        NavigationHelper.showSuccessSnackBar('สมัครสมาชิกสำเร็จ');
+        await Future.delayed(const Duration(milliseconds: 1200));
+        NavigationHelper.offNamed('/login');
+      } else {
+        NavigationHelper.showErrorSnackBar('อีเมลหรือชื่อผู้ใช้นี้มีอยู่แล้ว');
+      }
     } catch (e) {
       NavigationHelper.showErrorSnackBar(
         'สมัครสมาชิกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง',
