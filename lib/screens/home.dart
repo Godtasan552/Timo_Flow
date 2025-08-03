@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../components/drawer.dart';
-import 'package:intl/intl.dart'; // ใช้แสดงชื่อเดือน
+import 'package:intl/intl.dart';
+import 'package:get/get.dart';
+import 'alltask.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -39,10 +41,9 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(width: 8),
-            CircleAvatar(
-              radius: 20,
-              backgroundImage: AssetImage('assets/images/avatar.png'),
-            ),
+            const Spacer(),
+            const Icon(Icons.person, color: Colors.pinkAccent),
+            const SizedBox(width: 16),
           ],
         ),
         centerTitle: true,
@@ -138,7 +139,12 @@ class _HomePageState extends State<HomePage> {
                   'All Tasks',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
-                IconButton(icon: const Icon(Icons.tune), onPressed: () {}),
+                IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () {
+                    Get.to(() => const AllTaskPage());
+                  },
+                ),
               ],
             ),
           ),
