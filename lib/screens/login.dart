@@ -243,7 +243,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           Flexible(
                             child: Text(
-                              'Remember me for 30 days',
+                              'Remember me ',
                               style: TextStyle(
                                 color: Colors.grey[600],
                                 fontSize: 14,
