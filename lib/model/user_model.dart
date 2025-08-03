@@ -6,8 +6,6 @@ class User {
   final String email;
   final String username;
   final String password;
-  final String firstName;
-  final String lastName;
   final String? profileImage;
 
   User({
@@ -15,20 +13,15 @@ class User {
     required this.email,
     required this.username,
     required this.password,
-    required this.firstName,
-    required this.lastName,
+
     this.profileImage,
   });
-
-  String get fullName => '$firstName $lastName';
 
   Map<String, dynamic> toJson() => {
     'id': id,
     'email': email,
     'username': username,
     'password': password,
-    'firstName': firstName,
-    'lastName': lastName,
     'profileImage': profileImage,
   };
 
@@ -37,8 +30,6 @@ class User {
     email: json['email'],
     username: json['username'],
     password: json['password'],
-    firstName: json['firstName'],
-    lastName: json['lastName'],
     profileImage: json['profileImage'],
   );
 }

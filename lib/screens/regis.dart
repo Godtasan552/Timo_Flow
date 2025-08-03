@@ -12,8 +12,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -25,8 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -44,13 +42,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      // เรียก AuthController register
       final success = await _authController.register(
         email: _emailController.text.trim(),
-        username: _emailController.text.trim(),
+        username: _usernameController.text.trim(),
         password: _passwordController.text,
-        firstName: _firstNameController.text,
-        lastName: _lastNameController.text,
       );
 
       if (success) {
@@ -234,7 +229,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       // Username Field (combining first and last name for username)
                       _buildInputField(
                         label: 'Username',
-                        controller: _firstNameController,
+                        controller: _usernameController,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'กรุณากรอกชื่อผู้ใช้';

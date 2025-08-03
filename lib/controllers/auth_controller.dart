@@ -29,38 +29,35 @@ class AuthController extends GetxController {
   }
 
   // ฟังก์ชันสมัครสมาชิก
+  // ...existing code...
   Future<bool> register({
     required String email,
     required String username,
     required String password,
-    required String firstName,
-    required String lastName,
   }) async {
     final users = await StorageService.loadUsers();
-
-    // ตรวจสอบซ้ำ
+  
     if (users.any((u) => u.email == email || u.username == username)) {
       NavigationHelper.showErrorSnackBar('อีเมลหรือชื่อผู้ใช้นี้มีอยู่แล้ว');
       return false;
     }
-
+  
     final user = User(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       email: email,
       username: username,
       password: password,
-      firstName: firstName,
-      lastName: lastName,
     );
-
+  
     users.add(user);
     await StorageService.saveUsers(users);
-
+  
     NavigationHelper.showSuccessSnackBar('สมัครสมาชิกสำเร็จ');
     await Future.delayed(const Duration(milliseconds: 1500));
     NavigationHelper.offNamed('/login');
     return true;
   }
+  // ...existing code...
 
   // ฟังก์ชันรีเซ็ตรหัสผ่าน (จำลอง)
   Future<bool> resetPassword(String email) async {
