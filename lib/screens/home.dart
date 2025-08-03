@@ -4,8 +4,7 @@ import 'package:intl/intl.dart';
 import '../controllers/task_controller.dart';
 import '../components/drawer.dart';
 import 'creattask.dart';
-import 'task_detail.dart';
-import '../model/tasks_model.dart'; // เพิ่มบรรทัดนี้
+import '../model/tasks_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,20 +22,20 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _selectedDay = DateTime.now();
-    // โหลด tasks ของ user ที่ login
+    // TODO: ใส่ userId จริง
     // _taskController.loadTasksForUser(userId);
   }
 
   @override
-Widget build(BuildContext context) {
-  final int daysInMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).day;
+  Widget build(BuildContext context) {
+    final int daysInMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).day;
 
-  return Scaffold(
-    drawer: const MyDrawer(),
-    appBar: AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      iconTheme: const IconThemeData(color: Colors.black),
+    return Scaffold(
+      drawer: const MyDrawer(),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
         title: Row(
           children: [
             IconButton(
@@ -53,7 +52,7 @@ Widget build(BuildContext context) {
                   value: _selectedMonth,
                   underline: const SizedBox(),
                   items: List.generate(12, (i) {
-                    final date = DateTime(DateTime.now().year, i + 1);
+                    final date = DateTime(DateTime.now().year, i + 1, 1);
                     return DropdownMenuItem(
                       value: date,
                       child: Text(DateFormat.yMMMM().format(date)),
@@ -69,7 +68,7 @@ Widget build(BuildContext context) {
               icon: const Icon(Icons.arrow_right),
               onPressed: () {
                 setState(() {
-                  _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+                  _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 1);
                 });
               },
             ),
@@ -91,7 +90,7 @@ Widget build(BuildContext context) {
       ),
       body: Column(
         children: [
-          // Calendar (บน
+          // Calendar (บน)
           Padding(
             padding: const EdgeInsets.all(8),
             child: Card(
@@ -201,7 +200,6 @@ Widget build(BuildContext context) {
       floatingActionButton: _buildFAB(context),
     );
   }
-
 
   Widget _buildFAB(BuildContext context) {
     return FloatingActionButton(
