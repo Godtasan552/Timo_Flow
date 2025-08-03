@@ -5,6 +5,7 @@ import '../screens/splash_screen.dart';
 import '../screens/login.dart';
 import '../screens/regis.dart';
 import '../screens/forget_pass.dart';
+import '../screens/home.dart';
 
 class AppPages {
   AppPages._();
@@ -42,8 +43,8 @@ class AppPages {
       transitionDuration: const Duration(milliseconds: 300),
     ),
 
-    // อนาคตสามารถเพิ่ม routes อื่นๆ ได้ที่นี่
-    /*
+     // อนาคตสามารถเพิ่ม routes อื่นๆ ได้ที่นี่
+    
     GetPage(
       name: AppRoutes.HOME,
       page: () => const HomeScreen(),
@@ -51,6 +52,7 @@ class AppPages {
       transitionDuration: const Duration(milliseconds: 300),
     ),
     
+    /*
     GetPage(
       name: AppRoutes.PROFILE,
       page: () => const ProfileScreen(),
