@@ -2,13 +2,14 @@ import 'package:get/get.dart';
 import '../model/user_model.dart';
 import '../services/storage_service.dart';
 import '../utils/navigation_helper.dart';
-
+import '../services/universal_storage_service.dart';
 class AuthController extends GetxController {
   Rxn<User> currentUser = Rxn<User>();
 
   // ฟังก์ชันล็อกอิน
   Future<bool> login(String emailOrUsername, String password) async {
-    final users = await StorageService.loadUsers();
+    final users = await UniversalStorageService.loadUsers();
+
     final user = users.firstWhereOrNull(
       (u) =>
           (u.email == emailOrUsername || u.username == emailOrUsername) &&
@@ -35,7 +36,7 @@ class AuthController extends GetxController {
     required String username,
     required String password,
   }) async {
-    final users = await StorageService.loadUsers();
+    final users = await UniversalStorageService.loadUsers();
   
     if (users.any((u) => u.email == email || u.username == username)) {
       NavigationHelper.showErrorSnackBar('อีเมลหรือชื่อผู้ใช้นี้มีอยู่แล้ว');
@@ -50,7 +51,7 @@ class AuthController extends GetxController {
     );
   
     users.add(user);
-    await StorageService.saveUsers(users);
+    await UniversalStorageService.saveUsers(users);
   
     NavigationHelper.showSuccessSnackBar('สมัครสมาชิกสำเร็จ');
     await Future.delayed(const Duration(milliseconds: 1500));
