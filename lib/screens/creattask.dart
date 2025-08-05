@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../model/tasks_model.dart';
 import '../controllers/task_controller.dart';
+import '../controllers/auth_controller.dart';
 
 class CreatTaskPage extends StatefulWidget {
   final TaskType? initialType;
@@ -26,6 +27,8 @@ class _CreatTaskPageState extends State<CreatTaskPage> {
   String _category = 'even';
 
   final TaskController _taskController = Get.find();
+  final authController = Get.find<AuthController>();
+  String? userId;
 
   @override
   void initState() {
@@ -33,6 +36,7 @@ class _CreatTaskPageState extends State<CreatTaskPage> {
     _selectedType = widget.initialType ?? TaskType.even;
     _selectedDate = DateTime.now();
     _category = _selectedType?.name ?? 'even';
+    userId = authController.currentUser.value?.id;
   }
 
   @override
@@ -68,7 +72,8 @@ class _CreatTaskPageState extends State<CreatTaskPage> {
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(labelText: 'Task Name'),
-                validator: (v) => v == null || v.isEmpty ? 'กรุณากรอกชื่อ Task' : null,
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'กรุณากรอกชื่อ Task' : null,
               ),
               const SizedBox(height: 16),
               // วันที่
@@ -89,7 +94,8 @@ class _CreatTaskPageState extends State<CreatTaskPage> {
                   );
                   if (picked != null) setState(() => _selectedDate = picked);
                 },
-                validator: (v) => _selectedDate == null ? 'กรุณาเลือกวันที่' : null,
+                validator: (v) =>
+                    _selectedDate == null ? 'กรุณาเลือกวันที่' : null,
               ),
               const SizedBox(height: 16),
               // เวลาเริ่ม/จบ
@@ -180,7 +186,9 @@ class _CreatTaskPageState extends State<CreatTaskPage> {
                   DropdownMenuItem(value: 10080, child: Text('1 สัปดาห์')),
                 ],
                 onChanged: (val) => setState(() => _notifyBefore = val ?? 5),
-                decoration: const InputDecoration(labelText: 'แจ้งเตือนก่อนเวลา'),
+                decoration: const InputDecoration(
+                  labelText: 'แจ้งเตือนก่อนเวลา',
+                ),
               ),
               const SizedBox(height: 16),
               // Description
@@ -213,7 +221,7 @@ class _CreatTaskPageState extends State<CreatTaskPage> {
                     // TODO: ใส่ userId จริง
                     final task = Task(
                       id: DateTime.now().millisecondsSinceEpoch.toString(),
-                      userId: 'demo', // เปลี่ยนเป็น userId จริง
+                      userId: userId ?? '', // เปลี่ยนเป็น userId จริง
                       title: _titleController.text,
                       description: _descController.text,
                       category: _category,

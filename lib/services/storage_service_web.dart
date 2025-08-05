@@ -28,4 +28,9 @@ class StorageService {
     final data = jsonEncode(tasks.map((e) => e.toJson()).toList());
     html.window.localStorage['tasks'] = data;
   }
+
+  static Future<List<Task>> loadTasksForUser(String userId) async {
+    final tasks = await loadTasks();
+    return tasks.where((task) => task.userId == userId).toList();
+  }
 }

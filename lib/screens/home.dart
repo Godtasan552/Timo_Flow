@@ -5,6 +5,7 @@ import '../controllers/task_controller.dart';
 import '../components/drawer.dart';
 import 'creattask.dart';
 import '../model/tasks_model.dart';
+import '../controllers/auth_controller.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,21 +15,33 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
+  DateTime _selectedMonth = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    1,
+  );
   DateTime? _selectedDay;
   final TaskController _taskController = Get.put(TaskController());
+  final authController = Get.find<AuthController>();
+  String? userId;
 
   @override
   void initState() {
     super.initState();
     _selectedDay = DateTime.now();
-    // TODO: ใส่ userId จริง
-    // _taskController.loadTasksForUser(userId);
+    userId = authController.currentUser.value?.id;
+    if (userId != null) {
+      _taskController.loadTasksForUser(userId!);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final int daysInMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0).day;
+    final int daysInMonth = DateTime(
+      _selectedMonth.year,
+      _selectedMonth.month + 1,
+      0,
+    ).day;
 
     return Scaffold(
       drawer: const MyDrawer(),
@@ -42,7 +55,11 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.arrow_left),
               onPressed: () {
                 setState(() {
-                  _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1, 1);
+                  _selectedMonth = DateTime(
+                    _selectedMonth.year,
+                    _selectedMonth.month - 1,
+                    1,
+                  );
                 });
               },
             ),
@@ -68,7 +85,11 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.arrow_right),
               onPressed: () {
                 setState(() {
-                  _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 1);
+                  _selectedMonth = DateTime(
+                    _selectedMonth.year,
+                    _selectedMonth.month + 1,
+                    1,
+                  );
                 });
               },
             ),
@@ -108,13 +129,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     runSpacing: 8,
                     children: List.generate(daysInMonth, (index) {
                       final day = index + 1;
-                      final isSelected = _selectedDay?.day == day &&
+                      final isSelected =
+                          _selectedDay?.day == day &&
                           _selectedDay?.month == _selectedMonth.month &&
                           _selectedDay?.year == _selectedMonth.year;
                       return GestureDetector(
                         onTap: () {
                           setState(() {
-                            _selectedDay = DateTime(_selectedMonth.year, _selectedMonth.month, day);
+                            _selectedDay = DateTime(
+                              _selectedMonth.year,
+                              _selectedMonth.month,
+                              day,
+                            );
                           });
                         },
                         child: Container(
@@ -125,7 +151,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: isSelected ? Colors.pink[100] : Colors.white,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: isSelected ? Colors.pinkAccent : Colors.grey[300]!,
+                              color: isSelected
+                                  ? Colors.pinkAccent
+                                  : Colors.grey[300]!,
                               width: 2,
                             ),
                           ),
@@ -143,15 +171,27 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Obx(() {
               final tasks = _selectedDay == null
                   ? []
-                  : _taskController.filterByDate(_selectedDay!);
+                  : _taskController
+                        .filterByDate(_selectedDay!)
+                        .where((task) => task.userId == userId)
+                        .toList();
               return Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Tasks', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                        const Text(
+                          'Tasks',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
                         IconButton(
                           icon: const Icon(Icons.menu),
                           onPressed: () {
@@ -172,8 +212,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: task.type == TaskType.birthday
                                     ? Colors.blue[50]
                                     : task.type == TaskType.even
-                                        ? Colors.pink[50]
-                                        : Colors.purple[50],
+                                    ? Colors.pink[50]
+                                    : Colors.purple[50],
                                 child: ListTile(
                                   title: Text(task.title),
                                   subtitle: Text(task.description ?? ''),
@@ -181,7 +221,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     task.startTime != null
                                         ? '${task.startTime!.hour.toString().padLeft(2, '0')}:${task.startTime!.minute.toString().padLeft(2, '0')}'
                                         : '',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                   onTap: () {
                                     // ไปหน้า Task Detail

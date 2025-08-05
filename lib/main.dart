@@ -3,8 +3,10 @@ import 'package:get/get.dart';
 import 'routes/app_pages.dart';
 import 'routes/app_routes.dart';
 import 'controllers/task_controller.dart';
+import 'controllers/auth_controller.dart';
 
 void main() {
+  Get.put(AuthController());
   Get.put(TaskController());
   runApp(const MainApp());
 }
