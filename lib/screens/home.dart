@@ -143,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 IconButton(
                   icon: const Icon(Icons.menu),
                   onPressed: () {
-                    Get.to(() => const AllTaskPage());
+                    Get.to(() => const TaskListPage());
                   },
                 ),
               ],
@@ -173,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Get.to(() => const CreatTaskPage());
+          Get.to(() => const CreateTaskPage());
         },
         backgroundColor: Colors.pinkAccent,
         child: const Icon(Icons.add),
