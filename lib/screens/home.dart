@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get/get_connect/http/src/utils/utils.dart';
 import 'package:intl/intl.dart';
 import '../controllers/task_controller.dart';
 import '../components/drawer.dart';
 import 'creattask.dart';
 import '../model/tasks_model.dart';
 import '../controllers/auth_controller.dart';
+import 'task_detail.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -210,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         IconButton(
                           icon: const Icon(Icons.menu),
                           onPressed: () {
-                            // ไปหน้า All Task
+                            // Get.to(() => const MyDrawer());
                           },
                         ),
                       ],
@@ -223,6 +225,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             itemCount: tasks.length,
                             itemBuilder: (context, index) {
                               final task = tasks[index];
+                              final dateText = DateFormat(
+                                'dd MMMM yyyy',
+                              ).format(task.date); // <-- วันที่ภาษาอังกฤษ
+
                               return Card(
                                 color: task.type == TaskType.birthday
                                     ? Colors.blue[50]
@@ -231,7 +237,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                     : Colors.purple[50],
                                 child: ListTile(
                                   title: Text(task.title),
-                                  subtitle: Text(task.description ?? ''),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (task.description != null &&
+                                          task.description!.isNotEmpty)
+                                        Text(task.description!),
+                                      Text(
+                                        dateText,
+                                        style: const TextStyle(
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                   trailing: Text(
                                     task.startTime != null
                                         ? '${task.startTime!.hour.toString().padLeft(2, '0')}:${task.startTime!.minute.toString().padLeft(2, '0')}'
@@ -241,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   onTap: () {
-                                    // ไปหน้า Task Detail
+                                    Get.to(() => TaskDetail(task: task));
                                   },
                                 ),
                               );
