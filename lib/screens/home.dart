@@ -28,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedDay = DateTime.now();
+    _selectedDay = null;
     userId = authController.currentUser.value?.id;
     if (userId != null) {
       _taskController.loadTasksForUser(userId!);
@@ -169,12 +169,27 @@ class _HomeScreenState extends State<HomeScreen> {
           // Tasks (ล่าง)
           Expanded(
             child: Obx(() {
-              final tasks = _selectedDay == null
-                  ? []
-                  : _taskController
-                        .filterByDate(_selectedDay!)
-                        .where((task) => task.userId == userId)
-                        .toList();
+              final now = DateTime.now();
+              final tasks =
+                  _selectedDay != null
+                        ? _taskController
+                              .filterByDate(_selectedDay!)
+                              .where((task) => task.userId == userId)
+                              .toList()
+                        : _taskController.tasks
+                              .where(
+                                (task) =>
+                                    task.userId == userId &&
+                                    task.date != null &&
+                                    !task.date!.isBefore(
+                                      DateTime(now.year, now.month, now.day),
+                                    ),
+                              )
+                              .toList()
+                    ..sort(
+                      (a, b) => a.date!.compareTo(b.date!),
+                    ); // sort ตามวันที่
+
               return Column(
                 children: [
                   Padding(
@@ -203,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   Expanded(
                     child: tasks.isEmpty
-                        ? const Center(child: Text('No tasks for this day'))
+                        ? const Center(child: Text('No tasks available'))
                         : ListView.builder(
                             itemCount: tasks.length,
                             itemBuilder: (context, index) {
