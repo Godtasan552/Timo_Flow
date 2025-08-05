@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../model/tasks_model.dart';
-import '../services/storage_service.dart';
+import '../services/storage_service_mobile.dart';
 
 class TaskController extends GetxController {
   RxList<Task> tasks = <Task>[].obs;
