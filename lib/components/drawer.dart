@@ -53,19 +53,7 @@ class _MyDrawerState extends State<MyDrawer> {
               Get.to(() => const SettingsPage());
             },
           ),
-          ListTile(
-            title: const Text('Print data (debug)'),
-            onTap: () async {
-              Navigator.pop(context);
-              final users = await StorageService.loadUsers();
-              final tasks = await StorageService.loadTasks();
-              final encoder = const JsonEncoder.withIndent('  ');
-              final usersJson = encoder.convert(users.map((e) => e.toJson()).toList());
-              final tasksJson = encoder.convert(tasks.map((e) => e.toJson()).toList());
-              debugPrint("🧑‍🦱 Users:\n$usersJson");
-              debugPrint("📋 Tasks:\n$tasksJson");
-            },
-          ),
+          
 
         ],
       ),
