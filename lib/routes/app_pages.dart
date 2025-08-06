@@ -49,7 +49,7 @@ class AppPages {
     
     GetPage(
       name: AppRoutes.HOME,
-      page: () => const SearchScreen(),
+      page: () => const HomeScreen(),
       transition: Transition.zoom,
       transitionDuration: const Duration(milliseconds: 300),
     ),
@@ -65,7 +65,7 @@ class AppPages {
 
     GetPage(
       name: AppRoutes.SEARCH,
-      page: () => const HomeScreen(),
+      page: () => const SearchScreen(),
       transition: Transition.zoom,
       transitionDuration: const Duration(milliseconds: 300),
     ),

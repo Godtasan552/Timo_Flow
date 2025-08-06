@@ -6,6 +6,8 @@ import 'dart:async';
 import 'package:get/get.dart';
 import 'edit_task.dart';
 import '../controllers/task_controller.dart';
+import '../screens/search.dart';
+import '../screens/toggle.dart';
 
 class TaskDetail extends StatefulWidget {
   final Task task;
@@ -20,7 +22,7 @@ class _TaskDetailState extends State<TaskDetail> {
   late Duration remainingTime;
   Timer? timer;
   final TaskController _taskController = Get.find<TaskController>();
-  
+
   // เก็บ task ที่อัพเดตแล้ว
   Task get currentTask {
     // หา task ล่าสุดจาก controller
@@ -86,6 +88,40 @@ class _TaskDetailState extends State<TaskDetail> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Task Detail',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+          ),
+        ),
+        centerTitle: true, // ✅ ทำให้หัวตรงกลาง
+        backgroundColor: const Color(0xFFADBFFF),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SearchScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.check_box),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ToggleScreen()),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+
+
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -99,36 +135,16 @@ class _TaskDetailState extends State<TaskDetail> {
         child: SafeArea(
           child: Column(
             children: [
-              // Header with back button
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios, size: 24),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    const Expanded(
-                      child: Text(
-                        'task detail',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 40),
-                  ],
-                ),
-              ),
 
               // Main content - ใช้ Obx เพื่อฟังการเปลี่ยนแปลง
               Expanded(
                 child: Obx(() {
                   final task = currentTask; // ได้ task ที่อัพเดตล่าสุด
-                  final dateText = DateFormat('EEEE, MMMM d, yyyy').format(task.date);
-                  final timeRange = task.startTime != null && task.endTime != null
+                  final dateText = DateFormat(
+                    'EEEE, MMMM d, yyyy',
+                  ).format(task.date);
+                  final timeRange =
+                      task.startTime != null && task.endTime != null
                       ? '${task.startTime!.hour.toString().padLeft(2, '0')}:${task.startTime!.minute.toString().padLeft(2, '0')}-${task.endTime!.hour.toString().padLeft(2, '0')}:${task.endTime!.minute.toString().padLeft(2, '0')}'
                       : 'No time';
 
@@ -159,7 +175,8 @@ class _TaskDetailState extends State<TaskDetail> {
                                 children: [
                                   // Type Tag and Time Row
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Container(
                                         padding: const EdgeInsets.symmetric(
@@ -168,7 +185,9 @@ class _TaskDetailState extends State<TaskDetail> {
                                         ),
                                         decoration: BoxDecoration(
                                           color: const Color(0xFFE3F2FD),
-                                          borderRadius: BorderRadius.circular(20),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
                                         ),
                                         child: Text(
                                           task.type.name,
@@ -228,22 +247,29 @@ class _TaskDetailState extends State<TaskDetail> {
                                       children: [
                                         remainingTime > Duration.zero
                                             ? const Text("Focus Mode is active")
-                                            : const Text("Focus Mode Completed"),
+                                            : const Text(
+                                                "Focus Mode Completed",
+                                              ),
                                         Center(
                                           child: Container(
                                             padding: const EdgeInsets.all(16),
                                             decoration: BoxDecoration(
                                               color: Colors.red[100],
-                                              borderRadius: BorderRadius.circular(8),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                             ),
                                             child: Column(
                                               children: [
-                                                if (remainingTime > Duration.zero)
+                                                if (remainingTime >
+                                                    Duration.zero)
                                                   Text(
-                                                    formatDuration(remainingTime),
+                                                    formatDuration(
+                                                      remainingTime,
+                                                    ),
                                                     style: const TextStyle(
                                                       fontSize: 24,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                     ),
                                                   )
                                                 else
@@ -251,7 +277,8 @@ class _TaskDetailState extends State<TaskDetail> {
                                                     "Time is over!",
                                                     style: TextStyle(
                                                       fontSize: 24,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                       color: Colors.red,
                                                     ),
                                                   ),
@@ -297,8 +324,10 @@ class _TaskDetailState extends State<TaskDetail> {
                                   ),
                                   onPressed: () async {
                                     // รอให้หน้า Edit เสร็จแล้วอัพเดต countdown
-                                    await Get.to(() => EditTaskPage(task: task));
-                                    
+                                    await Get.to(
+                                      () => EditTaskPage(task: task),
+                                    );
+
                                     // หยุด timer เก่าและเริ่มใหม่หากจำเป็น
                                     timer?.cancel();
                                     _startCountdownIfNeeded();

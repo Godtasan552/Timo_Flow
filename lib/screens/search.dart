@@ -37,21 +37,28 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void filterTasks() {
-    String query = searchController.text.toLowerCase();
+    String query = searchController.text.toLowerCase().trim();
     setState(() {
-      filteredTasks = allTasks.where((task) {
-        final matchesText = task.title.toLowerCase().contains(query) ||
-            (task.description?.toLowerCase().contains(query) ?? false);
+      if (query.isEmpty) {
+        // ถ้าช่องค้นหาว่างเลย ให้แสดงรายการว่างเลย
+        filteredTasks = [];
+      } else {
+        // กรองตามข้อความและวันที่
+        filteredTasks = allTasks.where((task) {
+          final matchesText = task.title.toLowerCase().contains(query) ||
+              (task.description?.toLowerCase().contains(query) ?? false);
 
-        final matchesDate = selectedDate == null ||
-            (task.date.year == selectedDate!.year &&
-                task.date.month == selectedDate!.month &&
-                task.date.day == selectedDate!.day);
+          final matchesDate = selectedDate == null ||
+              (task.date.year == selectedDate!.year &&
+                  task.date.month == selectedDate!.month &&
+                  task.date.day == selectedDate!.day);
 
-        return matchesText && matchesDate;
-      }).toList();
+          return matchesText && matchesDate;
+        }).toList();
+      }
     });
   }
+
 
   void pickDate() async {
     final picked = await showDatePicker(
