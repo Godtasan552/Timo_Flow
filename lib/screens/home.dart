@@ -32,6 +32,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // โหมดแสดงปฏิทิน: false = เดือนเต็ม, true = แสดง 4 วัน
   bool _showFewDays = false;
 
+  // เก็บค่าที่เลือกใน Dropdown เดือนและปี
+  late int _selectedMonth;
+  late int _selectedYear;
+
   @override
   void initState() {
     super.initState();
@@ -40,34 +44,31 @@ class _HomeScreenState extends State<HomeScreen> {
       _taskController.loadTasksForUser(userId!);
     }
     _selectedDay = _focusedDay;
+    _selectedMonth = _focusedDay.month;
+    _selectedYear = _focusedDay.year;
   }
 
-  // สร้าง List ของวันที่จะใช้แสดงในโหมด 4 วัน (เช่น เลือกวันไหน ก็แสดงวันนั้น + 3 วันถัดไป)
-  List<DateTime> get _fewDaysList {
-    return List.generate(4, (index) => _focusedDay.add(Duration(days: index)));
-  }
-
-  // ฟังก์ชันเปลี่ยนเดือนและปีผ่าน dropdown
+  // เปลี่ยนเดือนและปี ผ่าน dropdown
   void _onMonthYearChanged(DateTime newDate) {
     setState(() {
-      _focusedDay = DateTime(newDate.year, newDate.month, _focusedDay.day);
+      _selectedYear = newDate.year;
+      _selectedMonth = newDate.month;
+      _focusedDay = DateTime(_selectedYear, _selectedMonth, 1);
       _selectedDay = _focusedDay;
     });
   }
 
-  // สร้าง Dropdown รายเดือน + ปี ใน AppBar ด้านขวา
+  // สร้าง Dropdown เดือน และ ปี
   Widget _buildMonthYearDropdown() {
-    // สร้าง list ปีปัจจุบัน +/- 5 ปี
     final currentYear = DateTime.now().year;
     final years = List.generate(11, (i) => currentYear - 5 + i);
-
-    // สร้าง list เดือน 1-12
     final months = List.generate(12, (i) => i + 1);
 
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         DropdownButton<int>(
-          value: _focusedDay.month,
+          value: _selectedMonth,
           underline: const SizedBox(),
           items: months
               .map((m) => DropdownMenuItem(
@@ -77,13 +78,13 @@ class _HomeScreenState extends State<HomeScreen> {
               .toList(),
           onChanged: (month) {
             if (month != null) {
-              _onMonthYearChanged(DateTime(_focusedDay.year, month, 1));
+              _onMonthYearChanged(DateTime(_selectedYear, month, 1));
             }
           },
         ),
         const SizedBox(width: 8),
         DropdownButton<int>(
-          value: _focusedDay.year,
+          value: _selectedYear,
           underline: const SizedBox(),
           items: years
               .map((y) => DropdownMenuItem(
@@ -93,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
               .toList(),
           onChanged: (year) {
             if (year != null) {
-              _onMonthYearChanged(DateTime(year, _focusedDay.month, 1));
+              _onMonthYearChanged(DateTime(year, _selectedMonth, 1));
             }
           },
         ),
@@ -101,60 +102,47 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // สร้าง list วันที่ในโหมด 4 วัน (วันที่โฟกัส + 3 วันถัดไป)
+  List<DateTime> get _fewDaysList {
+    return List.generate(4, (index) => _focusedDay.add(Duration(days: index)));
+  }
+
   @override
   Widget build(BuildContext context) {
-    // ถ้าโหมดเดือนเต็ม ให้แสดง Task ตามวันที่เลือกปกติ
-    // ถ้าโหมด 4 วัน Task list แสดง task ของวันที่เลือก (_selectedDay)
     return Scaffold(
       drawer: const MyDrawer(),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
-        title: const Text('Timo Flow', style: TextStyle(color: Colors.black)),
         centerTitle: true,
         actions: [
+          _buildMonthYearDropdown(),
+          const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.search),
-            onPressed: () {},
+            onPressed: () {
+              // TODO: เพิ่มฟังก์ชันค้นหา
+            },
           ),
           IconButton(
             icon: const Icon(Icons.check_box),
-            onPressed: () {},
-          ),
-          // ปุ่ม All Task toggle
-          TextButton(
             onPressed: () {
-              setState(() {
-                _showFewDays = !_showFewDays;
-                if (!_showFewDays) {
-                  // ถ้าออกจากโหมด 4 วัน ให้เลือกวันแรกของเดือนที่โฟกัส
-                  _selectedDay = DateTime(_focusedDay.year, _focusedDay.month, 1);
-                } else {
-                  // ถ้าเข้าโหมด 4 วัน ให้เลือก focusedDay เป็นวันที่เลือก
-                  _selectedDay = _focusedDay;
-                }
-              });
+              // TODO: เพิ่มฟังก์ชัน toggle การแสดง task ที่ทำเสร็จ
             },
-            child: Text(
-              _showFewDays ? 'All Task' : 'Few Days',
-              style: const TextStyle(color: Colors.black),
-            ),
           ),
-          // Dropdown เดือน-ปี
-          _buildMonthYearDropdown(),
           const SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
+          // ปฏิทิน + เลือกโหมดแสดงแบบ 4 วัน หรือ เดือนเต็ม
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Card(
               elevation: 2,
               child: Column(
                 children: [
-                  // ถ้าโหมดเดือนเต็ม
                   if (!_showFewDays)
                     TableCalendar(
                       firstDay: DateTime(2020, 1, 1),
@@ -165,6 +153,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         setState(() {
                           _selectedDay = selectedDay;
                           _focusedDay = focusedDay;
+                          _selectedMonth = focusedDay.month;
+                          _selectedYear = focusedDay.year;
                         });
                       },
                       calendarStyle: CalendarStyle(
@@ -182,8 +172,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         titleCentered: true,
                       ),
                     ),
-
-                  // ถ้าโหมด 4 วัน (showFewDays == true)
                   if (_showFewDays)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -192,8 +180,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           icon: const Icon(Icons.arrow_left),
                           onPressed: () {
                             setState(() {
-                              // เลื่อนไป 1 วันย้อนหลัง
                               _focusedDay = _focusedDay.subtract(const Duration(days: 1));
+                              _selectedMonth = _focusedDay.month;
+                              _selectedYear = _focusedDay.year;
                             });
                           },
                         ),
@@ -229,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         Text(
-                                          DateFormat.E().format(day), // เช่น จ, อ, พ
+                                          DateFormat.E().format(day),
                                           style: const TextStyle(fontWeight: FontWeight.bold),
                                         ),
                                         const SizedBox(height: 4),
@@ -249,8 +238,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           icon: const Icon(Icons.arrow_right),
                           onPressed: () {
                             setState(() {
-                              // เลื่อนไป 1 วันข้างหน้า
                               _focusedDay = _focusedDay.add(const Duration(days: 1));
+                              _selectedMonth = _focusedDay.month;
+                              _selectedYear = _focusedDay.year;
                             });
                           },
                         ),
@@ -261,7 +251,37 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // Task list ด้านล่าง
+          // Toggle โหมด All Task / Few Days ด้านล่างปฏิทิน ฝั่งขวา ตรงข้ามกับ Tasks
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Tasks',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _showFewDays = !_showFewDays;
+                      if (!_showFewDays) {
+                        _selectedDay = DateTime(_focusedDay.year, _focusedDay.month, 1);
+                      } else {
+                        _selectedDay = _focusedDay;
+                      }
+                    });
+                  },
+                  child: Text(
+                    _showFewDays ? 'Few Days' : 'All Tasks',
+                    style: const TextStyle(color: Colors.black),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // รายการ Task
           Expanded(
             child: Obx(() {
               final now = DateTime.now();
@@ -282,74 +302,46 @@ class _HomeScreenState extends State<HomeScreen> {
                       .toList()
                 ..sort((a, b) => a.date!.compareTo(b.date!));
 
-              return Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Tasks',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                        // คุณจะเพิ่มปุ่มอื่นๆ ในแถวนี้ได้ เช่น filter ได้
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: tasks.isEmpty
-                        ? const Center(child: Text('No tasks available'))
-                        : ListView.builder(
-                            itemCount: tasks.length,
-                            itemBuilder: (context, index) {
-                              final task = tasks[index];
-                              final dateText =
-                                  DateFormat('dd MMMM yyyy').format(task.date);
+              return tasks.isEmpty
+                  ? const Center(child: Text('No tasks available'))
+                  : ListView.builder(
+                      itemCount: tasks.length,
+                      itemBuilder: (context, index) {
+                        final task = tasks[index];
+                        final dateText = DateFormat('dd MMMM yyyy').format(task.date);
 
-                              return Card(
-                                color: task.type == TaskType.birthday
-                                    ? Colors.blue[50]
-                                    : task.type == TaskType.even
-                                        ? Colors.pink[50]
-                                        : Colors.purple[50],
-                                child: ListTile(
-                                  title: Text(task.title),
-                                  subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      if (task.description != null &&
-                                          task.description!.isNotEmpty)
-                                        Text(task.description!),
-                                      Text(
-                                        dateText,
-                                        style: const TextStyle(
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  trailing: Text(
-                                    task.startTime != null
-                                        ? '${task.startTime!.hour.toString().padLeft(2, '0')}:${task.startTime!.minute.toString().padLeft(2, '0')}'
-                                        : '',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  onTap: () {
-                                    Get.to(() => TaskDetail(task: task));
-                                  },
+                        return Card(
+                          color: task.type == TaskType.birthday
+                              ? Colors.blue[50]
+                              : task.type == TaskType.even
+                                  ? Colors.pink[50]
+                                  : Colors.purple[50],
+                          child: ListTile(
+                            title: Text(task.title),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (task.description != null && task.description!.isNotEmpty)
+                                  Text(task.description!),
+                                Text(
+                                  dateText,
+                                  style: const TextStyle(fontStyle: FontStyle.italic),
                                 ),
-                              );
+                              ],
+                            ),
+                            trailing: Text(
+                              task.startTime != null
+                                  ? '${task.startTime!.hour.toString().padLeft(2, '0')}:${task.startTime!.minute.toString().padLeft(2, '0')}'
+                                  : '',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            onTap: () {
+                              Get.to(() => TaskDetail(task: task));
                             },
                           ),
-                  ),
-                ],
-              );
+                        );
+                      },
+                    );
             }),
           ),
         ],
