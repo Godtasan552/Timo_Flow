@@ -9,6 +9,8 @@ import 'creattask.dart';
 import '../model/tasks_model.dart';
 import '../controllers/auth_controller.dart';
 import 'task_detail.dart';
+import '../screens/search.dart';
+import '../screens/toggle.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -123,13 +125,23 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
-              // TODO: เพิ่มฟังก์ชันค้นหา
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SearchScreen(), // ← หน้าที่คุณจะไป
+                ),
+              );
             },
           ),
           IconButton(
             icon: const Icon(Icons.check_box),
             onPressed: () {
-              // TODO: เพิ่มฟังก์ชัน toggle การแสดง task ที่ทำเสร็จ
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ToggleScreen(), // ← หน้าที่คุณจะไป
+                ),
+              );
             },
           ),
           const SizedBox(width: 8),
