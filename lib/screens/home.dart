@@ -159,6 +159,29 @@ class _HomeScreenState extends State<HomeScreen> {
                           _selectedYear = focusedDay.year;
                         });
                       },
+                      eventLoader: (day) {
+                        return _taskController.tasks.where((task) {
+                          return isSameDay(task.date, day) && task.userId == userId;
+                        }).toList();
+                      },
+                      calendarBuilders: CalendarBuilders(
+                        markerBuilder: (context, date, events) {
+                          if (events.isNotEmpty) {
+                            return Positioned(
+                              bottom: 1,
+                              child: Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
                       calendarStyle: CalendarStyle(
                         todayDecoration: BoxDecoration(
                           color: Colors.pinkAccent,
@@ -174,6 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         titleCentered: true,
                       ),
                     ),
+
                   if (_showFewDays)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
