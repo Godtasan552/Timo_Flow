@@ -341,6 +341,9 @@ class _TaskDetailState extends State<TaskDetail> {
                                 ),
                                 onPressed: () {
                                   // TODO: Mark done logic
+
+                                  // ปิดหน้าปัจจุบัน
+                                  Navigator.pop(context);
                                 },
                                 child: const Text(
                                   'task done',
