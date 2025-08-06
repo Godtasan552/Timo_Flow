@@ -6,6 +6,7 @@ import 'controllers/task_controller.dart';
 import 'controllers/auth_controller.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   Get.put(AuthController());
   Get.put(TaskController());
   runApp(const MainApp());
