@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import '../model/tasks_model.dart';
 import '../services/storage_service_mobile.dart';
 import 'dart:async';
+import 'package:get/get.dart';
+import 'edit_task.dart';
 
 class TaskDetail extends StatefulWidget {
   final Task task;
@@ -213,7 +215,7 @@ class _TaskDetailState extends State<TaskDetail> {
                                       vertical: 8,
                                     ),
                                     child: const Text(
-                                      'ขณะนี้การล็อกอินเอง',
+                                      'Focus Mode is enabled for this task.',
                                       style: TextStyle(
                                         color: Colors.red,
                                         fontSize: 14,
@@ -224,7 +226,7 @@ class _TaskDetailState extends State<TaskDetail> {
 
                                 if (widget.task.focusMode == true)
                                   const Text(
-                                    'เพราะ Focus mode',
+                                    'currently in focus mode',
                                     style: TextStyle(
                                       color: Colors.red,
                                       fontSize: 14,
@@ -311,7 +313,9 @@ class _TaskDetailState extends State<TaskDetail> {
                                   ),
                                 ),
                                 onPressed: () {
-                                  // TODO: Edit logic
+                                  Get.to(
+                                    EditTaskPage(task: widget.task),
+                                  ); // Navigate to EditTask screen
                                 },
                                 child: const Text(
                                   'Edit Task',
