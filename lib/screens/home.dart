@@ -60,8 +60,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // สร้าง Dropdown เดือน และ ปี
   Widget _buildMonthYearDropdown() {
-    final currentYear = DateTime.now().year;
-    final years = List.generate(11, (i) => currentYear - 5 + i);
+    final firstYear = 2020;
+    final lastYear = 2077;
+    final years = List.generate(lastYear - firstYear + 1, (i) => firstYear + i);
+
     final months = List.generate(12, (i) => i + 1);
 
     return Row(
@@ -188,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         Expanded(
                           child: SizedBox(
-                            height: 70,
+                            height: 80,
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
                               itemCount: _fewDaysList.length,
