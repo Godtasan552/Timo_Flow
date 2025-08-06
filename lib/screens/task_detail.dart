@@ -5,6 +5,7 @@ import '../services/storage_service_mobile.dart';
 import 'dart:async';
 import 'package:get/get.dart';
 import 'edit_task.dart';
+import '../controllers/task_controller.dart';
 
 class TaskDetail extends StatefulWidget {
   final Task task;
@@ -419,10 +420,11 @@ class _TaskDetailState extends State<TaskDetail> {
 
   void _deleteTask() async {
     try {
-      // ลบ task จริงจาก storage
-      await StorageService.deleteTask(widget.task.id);
+      final taskController = Get.find<TaskController>(); // ดึง controller
 
-      // แสดง Snackbar แจ้งเตือนการลบสำเร็จ
+      // ลบ task ผ่าน controller
+      taskController.deleteTaskById(widget.task.id);
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -451,15 +453,14 @@ class _TaskDetailState extends State<TaskDetail> {
           ),
         );
 
-        // กลับไปหน้าก่อนหน้าหลังจากแสดง Snackbar
+        // กลับไปหน้า Home หลัง delay เล็กน้อย
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
-            Navigator.of(context).pop(); // กลับไปหน้าก่อนหน้า
+            Navigator.of(context).pop();
           }
         });
       }
     } catch (error) {
-      // แสดง error message หากการลบไม่สำเร็จ
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

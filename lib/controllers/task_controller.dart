@@ -15,6 +15,11 @@ class TaskController extends GetxController {
     userId = authController.currentUser.value?.id;
   }
 
+  void deleteTaskById(String taskId) async {
+    await StorageService.deleteTask(taskId);
+    tasks.removeWhere((task) => task.id == taskId); // อัปเดต RxList
+  }
+
   Future<void> loadTasksForUser(String userId) async {
     final allTasks = await StorageService.loadTasks();
     tasks.value = allTasks.where((t) => t.userId == userId).toList();
