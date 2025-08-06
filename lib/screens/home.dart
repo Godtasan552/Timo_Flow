@@ -351,15 +351,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: () {
                     setState(() {
                       _showFewDays = !_showFewDays;
-                      if (!_showFewDays) {
-                        _selectedDay = DateTime(
-                          _focusedDay.year,
-                          _focusedDay.month,
-                          1,
-                        );
-                      } else {
-                        _selectedDay = _focusedDay;
-                      }
+                      
                     });
                   },
                   child: Text(
