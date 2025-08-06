@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../model/tasks_model.dart';
+import '../services/storage_service_mobile.dart';
 import 'dart:async';
 
 class TaskDetail extends StatefulWidget {
@@ -66,7 +67,7 @@ class _TaskDetailState extends State<TaskDetail> {
 
   @override
   Widget build(BuildContext context) {
-    final dateText = DateFormat('EEEE, MMMM d, yyyy').format(widget.task.date!);
+    final dateText = DateFormat('EEEE, MMMM d, yyyy').format(widget.task.date);
     final timeRange =
         widget.task.startTime != null && widget.task.endTime != null
         ? '${widget.task.startTime!.hour.toString().padLeft(2, '0')}:${widget.task.startTime!.minute.toString().padLeft(2, '0')}-${widget.task.endTime!.hour.toString().padLeft(2, '0')}:${widget.task.endTime!.minute.toString().padLeft(2, '0')}'
@@ -205,6 +206,32 @@ class _TaskDetailState extends State<TaskDetail> {
                                 const SizedBox(height: 20),
 
                                 // Focus Mode Warning
+                                if (widget.task.focusMode == true)
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                    child: const Text(
+                                      'ขณะนี้การล็อกอินเอง',
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+
+                                if (widget.task.focusMode == true)
+                                  const Text(
+                                    'เพราะ Focus mode',
+                                    style: TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+
                                 const Spacer(),
 
                                 // Date
@@ -310,7 +337,7 @@ class _TaskDetailState extends State<TaskDetail> {
                                   ),
                                 ),
                                 onPressed: () {
-                                  // TODO: Delete logic
+                                  _showDeleteConfirmDialog();
                                 },
                                 child: const Text(
                                   'delete task',
@@ -360,6 +387,129 @@ class _TaskDetailState extends State<TaskDetail> {
         ),
       ),
     );
+  }
+
+  void _showDeleteConfirmDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Delete Task',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          ),
+          content: Text(
+            'Are you sure you want to delete "${widget.task.title}"? This action cannot be undone.',
+            style: const TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // ปิด dialog
+              },
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // ปิด dialog
+                _deleteTask(); // เรียกฟังก์ชันลบ task
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD32F2F),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Confirm',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteTask() async {
+    try {
+      // ลบ task จริงจาก storage
+      await StorageService.deleteTask(widget.task.id);
+
+      // แสดง Snackbar แจ้งเตือนการลบสำเร็จ
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Task "${widget.task.title}" deleted successfully',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF4CAF50),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+
+        // กลับไปหน้าก่อนหน้าหลังจากแสดง Snackbar
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            Navigator.of(context).pop(); // กลับไปหน้าก่อนหน้า
+          }
+        });
+      }
+    } catch (error) {
+      // แสดง error message หากการลบไม่สำเร็จ
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white, size: 20),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Failed to delete task. Please try again.',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFD32F2F),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    }
   }
 
   String formatDuration(Duration duration) {

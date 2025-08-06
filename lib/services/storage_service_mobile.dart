@@ -6,8 +6,18 @@ import 'dart:convert';
 import '../model/user_model.dart';
 import '../model/tasks_model.dart';
 
-
 class StorageService {
+  static Future<void> deleteTask(String taskId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getString('tasks');
+    if (data == null) return;
+    final list = jsonDecode(data);
+    List<Task> tasks = (list as List).map((e) => Task.fromJson(e)).toList();
+    tasks.removeWhere((task) => task.id == taskId);
+    final newData = jsonEncode(tasks.map((e) => e.toJson()).toList());
+    await prefs.setString('tasks', newData);
+  }
+
   static Future<List<User>> loadUsers() async {
     final prefs = await SharedPreferences.getInstance();
     final data = prefs.getString('users');
