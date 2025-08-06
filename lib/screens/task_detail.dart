@@ -209,29 +209,44 @@ class _TaskDetailState extends State<TaskDetail> {
 
                                 // Focus Mode Warning
                                 if (widget.task.focusMode == true)
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 8,
-                                    ),
-                                    child: const Text(
-                                      'Focus Mode is enabled for this task.',
-                                      style: TextStyle(
-                                        color: Colors.red,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
+                                  Column(
+                                    children: [
+                                      remainingTime > Duration.zero
+                                          ? const Text("Focus Mode is active")
+                                          : const Text("Focus Mode Completed"),
+                                      Center(
+                                        child: Container(
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red[100],
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              if (remainingTime > Duration.zero)
+                                                Text(
+                                                  formatDuration(remainingTime),
+                                                  style: const TextStyle(
+                                                    fontSize: 24,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                )
+                                              else
+                                                const Text(
+                                                  "Time is over!",
+                                                  style: TextStyle(
+                                                    fontSize: 24,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.red,
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
-
-                                if (widget.task.focusMode == true)
-                                  const Text(
-                                    'currently in focus mode',
-                                    style: TextStyle(
-                                      color: Colors.red,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                                    ],
                                   ),
 
                                 const Spacer(),
@@ -248,49 +263,6 @@ class _TaskDetailState extends State<TaskDetail> {
                                 const SizedBox(height: 20),
 
                                 // Focus Mode Timer
-                                if (widget.task.focusMode == true)
-                                  Center(
-                                    child: Container(
-                                      padding: const EdgeInsets.all(20),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black,
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          const Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(
-                                                Icons.access_time,
-                                                color: Colors.white,
-                                                size: 20,
-                                              ),
-                                              SizedBox(width: 8),
-                                              Text(
-                                                '3h',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            formatDuration(remainingTime),
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 36,
-                                              fontWeight: FontWeight.bold,
-                                              fontFamily: 'Courier',
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
                               ],
                             ),
                           ),
