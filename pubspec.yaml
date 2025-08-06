@@ -15,6 +15,7 @@ dependencies:
   shared_preferences: ^2.2.2
   table_calendar: ^3.0.8
   image_picker: ^1.0.5
+  flutter_local_notifications: ^19.4.0
 
 
 dev_dependencies:
