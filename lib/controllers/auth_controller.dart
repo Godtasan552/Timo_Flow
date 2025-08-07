@@ -1,14 +1,14 @@
 import 'package:get/get.dart';
 import '../model/user_model.dart';
-import '../services/storage_service.dart';
 import '../utils/navigation_helper.dart';
-
+import '../services/universal_storage_service.dart';
 class AuthController extends GetxController {
   Rxn<User> currentUser = Rxn<User>();
 
   // ฟังก์ชันล็อกอิน
   Future<bool> login(String emailOrUsername, String password) async {
     final users = await StorageService.loadUsers();
+
     final user = users.firstWhereOrNull(
       (u) =>
           (u.email == emailOrUsername || u.username == emailOrUsername) &&
