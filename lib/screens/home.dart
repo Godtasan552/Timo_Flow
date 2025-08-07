@@ -368,7 +368,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   child: Text(
                     _showFewDays ? 'Few Days' : 'All Tasks',
-                    style: const TextStyle(color: Colors.black),
+                    style: const TextStyle(color: Colors.blue),
                   ),
                 ),
               ],
