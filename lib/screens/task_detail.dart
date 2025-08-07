@@ -8,6 +8,8 @@ import 'edit_task.dart';
 import '../controllers/task_controller.dart';
 import '../screens/search.dart';
 import '../screens/toggle.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 
 class TaskDetail extends StatefulWidget {
   final Task task;
@@ -19,6 +21,24 @@ class TaskDetail extends StatefulWidget {
 }
 
 class _TaskDetailState extends State<TaskDetail> {
+  Widget _buildTag(String label, Color bgColor, Color textColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: textColor,
+          fontWeight: FontWeight.w600,
+          fontSize: 13,
+        ),
+      ),
+    );
+  }
+
   late Duration remainingTime;
   Timer? timer;
   final TaskController _taskController = Get.find<TaskController>();
@@ -91,10 +111,7 @@ class _TaskDetailState extends State<TaskDetail> {
       appBar: AppBar(
         title: const Text(
           'Task Detail',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
         ),
         centerTitle: true, // ✅ ทำให้หัวตรงกลาง
         backgroundColor: const Color(0xFFADBFFF),
@@ -121,7 +138,6 @@ class _TaskDetailState extends State<TaskDetail> {
         ],
       ),
 
-
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -135,7 +151,6 @@ class _TaskDetailState extends State<TaskDetail> {
         child: SafeArea(
           child: Column(
             children: [
-
               // Main content - ใช้ Obx เพื่อฟังการเปลี่ยนแปลง
               Expanded(
                 child: Obx(() {
@@ -178,25 +193,20 @@ class _TaskDetailState extends State<TaskDetail> {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                          vertical: 8,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFE3F2FD),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
+                                      Row(
+                                        children: [
+                                          _buildTag(
+                                            task.type.name,
+                                            const Color(0xFFE3F2FD),
+                                            const Color(0xFF1976D2),
                                           ),
-                                        ),
-                                        child: Text(
-                                          task.type.name,
-                                          style: const TextStyle(
-                                            color: Color(0xFF1976D2),
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
+                                          const SizedBox(width: 8),
+                                          _buildTag(
+                                            task.category,
+                                            const Color(0xFFFFF3E0),
+                                            const Color(0xFFEF6C00),
                                           ),
-                                        ),
+                                        ],
                                       ),
                                       Text(
                                         timeRange,
@@ -207,6 +217,7 @@ class _TaskDetailState extends State<TaskDetail> {
                                       ),
                                     ],
                                   ),
+
                                   const SizedBox(height: 20),
 
                                   // Title
@@ -313,7 +324,8 @@ class _TaskDetailState extends State<TaskDetail> {
                             Expanded(
                               child: Container(
                                 height: 50,
-                                child: ElevatedButton(
+                                child: 
+                                ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFFFFE0B2),
                                     foregroundColor: const Color(0xFF5D4037),
@@ -372,7 +384,8 @@ class _TaskDetailState extends State<TaskDetail> {
                             Expanded(
                               child: Container(
                                 height: 50,
-                                child: ElevatedButton(
+                                child: 
+                                ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFFC8E6C9),
                                     foregroundColor: const Color(0xFF2E7D32),
@@ -467,30 +480,10 @@ class _TaskDetailState extends State<TaskDetail> {
       _taskController.deleteTaskById(currentTask.id);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Task "${currentTask.title}" deleted successfully',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: const Color(0xFF4CAF50),
-            duration: const Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
+        showTopSnackBar(
+          Overlay.of(context),
+          CustomSnackBar.success(
+            message: 'Task "${currentTask.title}" deleted successfully',
           ),
         );
 
@@ -502,27 +495,52 @@ class _TaskDetailState extends State<TaskDetail> {
       }
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white, size: 20),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Failed to delete task. Please try again.',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: const Color(0xFFD32F2F),
-            duration: const Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
+        showTopSnackBar(
+          Overlay.of(context),
+          const CustomSnackBar.error(
+            message: 'Failed to delete task. Please try again.',
+          ),
+        );
+      }
+    }
+  }
+
+  void _markTaskDone() async {
+    try {
+      final updatedTask = Task(
+        id: currentTask.id,
+        userId: currentTask.userId,
+        title: currentTask.title,
+        description: currentTask.description,
+        category: currentTask.category,
+        date: currentTask.date,
+        startTime: currentTask.startTime,
+        endTime: currentTask.endTime,
+        isAllDay: currentTask.isAllDay,
+        notifyBefore: currentTask.notifyBefore,
+        focusMode: currentTask.focusMode,
+        isDone: true, // เปลี่ยนสถานะเป็น done
+        type: currentTask.type,
+      );
+
+      await _taskController.updateTask(updatedTask);
+
+      if (mounted) {
+        showTopSnackBar(
+          Overlay.of(context),
+          const CustomSnackBar.success(message: 'Task marked as done'),
+        );
+
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) Navigator.of(context).pop();
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        showTopSnackBar(
+          Overlay.of(context),
+          const CustomSnackBar.error(
+            message: 'Failed to mark task as done. Please try again.',
           ),
         );
       }

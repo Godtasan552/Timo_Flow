@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import '../model/tasks_model.dart';
 import '../controllers/task_controller.dart';
 import '../controllers/auth_controller.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 
 class CreatTaskPage extends StatefulWidget {
   final TaskType? initialType;
@@ -24,18 +26,24 @@ class _CreatTaskPageState extends State<CreatTaskPage> {
   int _notifyBefore = 5;
   DateTime? _selectedDate;
   final _categoryController = TextEditingController();
-  String _category = 'even';
 
   final TaskController _taskController = Get.find();
   final authController = Get.find<AuthController>();
   String? userId;
+
+  List<String> _categories = ['Work', 'Personal', 'Health', 'Study'];
+  String? _category;
+  final TextEditingController _newCategoryController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _selectedType = widget.initialType ?? TaskType.even;
     _selectedDate = DateTime.now();
-    _category = _selectedType?.name ?? 'even';
+
+    // ค่าเริ่มต้นของ _category ต้องมาก่อนใช้
+    _category = _categories.first;
+
     userId = authController.currentUser.value?.id;
   }
 
@@ -44,7 +52,41 @@ class _CreatTaskPageState extends State<CreatTaskPage> {
     _titleController.dispose();
     _descController.dispose();
     _categoryController.dispose();
+    _newCategoryController.dispose();
+
     super.dispose();
+  }
+
+  @override
+  void _scheduleNotification() async {
+    if (_notifyBefore > 0 && _selectedDate != null) {
+      DateTime notificationTime;
+
+      if (_startTime != null) {
+        // ถ้ามี start time ให้แจ้งเตือนก่อน start time
+        notificationTime = DateTime(
+          _selectedDate!.year,
+          _selectedDate!.month,
+          _selectedDate!.day,
+          _startTime!.hour,
+          _startTime!.minute,
+        ).subtract(Duration(minutes: _notifyBefore));
+      } else {
+        // ถ้าไม่มี start time ให้แจ้งเตือนก่อนวันที่
+        notificationTime = _selectedDate!.subtract(
+          Duration(minutes: _notifyBefore),
+        );
+      }
+
+      // ตรวจสอบว่าเวลาแจ้งเตือนยังไม่ผ่านไป
+      if (notificationTime.isAfter(DateTime.now())) {
+        print('Notification scheduled for: $notificationTime');
+        print('Task: ${_titleController.text}');
+
+        // TODO: เชื่อมต่อกับ notification service จริง
+        // เช่น flutter_local_notifications หรือ firebase_messaging
+      }
+    }
   }
 
   // ตรวจสอบความถูกต้องของเวลา
@@ -89,7 +131,6 @@ class _CreatTaskPageState extends State<CreatTaskPage> {
                     onSelected: (selected) {
                       setState(() {
                         _selectedType = type;
-                        _category = type.name;
                         // ถ้าไม่ใช่ goal ให้ปิด focus mode
                         if (_selectedType != TaskType.goal) {
                           _focusMode = false;
@@ -301,114 +342,159 @@ class _CreatTaskPageState extends State<CreatTaskPage> {
               const SizedBox(height: 16),
 
               // Category (แสดงเป็น info เท่านั้น)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Category', style: TextStyle(fontSize: 16)),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: _category,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                    ),
+                    isExpanded: true,
+                    items: _categories.map((cat) {
+                      return DropdownMenuItem(value: cat, child: Text(cat));
+                    }).toList(),
+                    onChanged: (val) => setState(() => _category = val),
+                    validator: (val) => val == null || val.isEmpty
+                        ? 'กรุณาเลือกหมวดหมู่'
+                        : null,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
                     children: [
-                      const Icon(Icons.category),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _newCategoryController,
+                          decoration: const InputDecoration(
+                            labelText: 'เพิ่มหมวดหมู่ใหม่',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
                       const SizedBox(width: 8),
-                      const Text('Category: '),
-                      Chip(
-                        label: Text(_category),
-                        backgroundColor: _selectedType == TaskType.birthday
-                            ? Colors.blue[100]
-                            : _selectedType == TaskType.even
-                            ? Colors.pink[100]
-                            : Colors.purple[100],
+                      ElevatedButton(
+                        onPressed: () {
+                          final newCat = _newCategoryController.text.trim();
+                          if (newCat.isNotEmpty &&
+                              !_categories.contains(newCat)) {
+                            setState(() {
+                              _categories.add(newCat);
+                              _category = newCat;
+                              _newCategoryController.clear();
+                            });
+                          }
+                        },
+                        child: const Text('เพิ่ม'),
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
+
               const SizedBox(height: 24),
 
               // ปุ่มสร้าง Task
               SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.add_task),
-                  label: const Text('Create Task'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                child:
+                    // และแก้ไขปุ่ม Create Task เพื่อแก้ SnackBar
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.add_task),
+                      label: const Text('Create Task'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: () async {
+                        if (!_formKey.currentState!.validate()) return;
+
+                        final timeError = _validateTimeRange();
+                        if (timeError != null) {
+                          showTopSnackBar(
+                            Overlay.of(context),
+                            CustomSnackBar.error(message: timeError),
+                          );
+                          return;
+                        }
+
+                        final focusError = _validateFocusMode();
+                        if (focusError != null) {
+                          showTopSnackBar(
+                            Overlay.of(context),
+                            CustomSnackBar.error(message: focusError),
+                          );
+                          return;
+                        }
+
+                        if (userId == null || userId!.isEmpty) {
+                          showTopSnackBar(
+                            Overlay.of(context),
+                            const CustomSnackBar.error(
+                              message: 'User not logged in',
+                            ),
+                          );
+                          return;
+                        }
+
+                        try {
+                          final task = Task(
+                            id: DateTime.now().millisecondsSinceEpoch
+                                .toString(),
+                            userId: userId!,
+                            title: _titleController.text.trim(),
+                            description: _descController.text.trim().isEmpty
+                                ? null
+                                : _descController.text.trim(),
+                            category: _category ?? 'Other',
+                            date: _selectedDate!,
+                            startTime: _isAllDay ? null : _startTime,
+                            endTime: _isAllDay ? null : _endTime,
+                            isAllDay: _isAllDay,
+                            notifyBefore: _notifyBefore > 0
+                                ? [_notifyBefore]
+                                : [],
+                            focusMode: _focusMode,
+                            isDone: false,
+                            type: _selectedType!,
+                          );
+
+                          await _taskController.addTask(task);
+
+                          if (mounted) {
+                            showTopSnackBar(
+                              Overlay.of(context),
+                              const CustomSnackBar.success(
+                                message: 'Task created successfully!',
+                              ),
+                            );
+
+                            await Future.delayed(
+                              const Duration(milliseconds: 800),
+                            );
+                            if (mounted) Navigator.pop(context);
+                          }
+                        } catch (error) {
+                          if (mounted) {
+                            showTopSnackBar(
+                              Overlay.of(context),
+                              CustomSnackBar.error(
+                                message: 'Error creating task: $error',
+                              ),
+                            );
+                          }
+                        }
+                      },
                     ),
-                  ),
-                  onPressed: () async {
-                    // ตรวจสอบ validation
-                    if (!_formKey.currentState!.validate()) return;
-
-                    // ตรวจสอบเวลา
-                    final timeError = _validateTimeRange();
-                    if (timeError != null) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(timeError)));
-                      return;
-                    }
-
-                    // ตรวจสอบ Focus Mode
-                    final focusError = _validateFocusMode();
-                    if (focusError != null) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(focusError)));
-                      return;
-                    }
-
-                    // ตรวจสอบ userId
-                    if (userId == null || userId!.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('User not logged in')),
-                      );
-                      return;
-                    }
-
-                    try {
-                      final task = Task(
-                        id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        userId: userId!,
-                        title: _titleController.text.trim(),
-                        description: _descController.text.trim().isEmpty
-                            ? null
-                            : _descController.text.trim(),
-                        category: _category,
-                        date: _selectedDate!,
-                        startTime: _isAllDay ? null : _startTime,
-                        endTime: _isAllDay ? null : _endTime,
-                        isAllDay: _isAllDay,
-                        notifyBefore: _notifyBefore > 0 ? [_notifyBefore] : [],
-                        focusMode: _focusMode,
-                        isDone: false,
-                        type: _selectedType!,
-                      );
-
-                      await _taskController.addTask(task);
-
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Task created successfully!'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                        Navigator.pop(context);
-                      }
-                    } catch (error) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error creating task: $error'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    }
-                  },
-                ),
               ),
             ],
           ),

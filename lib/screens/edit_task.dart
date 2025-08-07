@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../model/tasks_model.dart';
 import '../controllers/task_controller.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 
 class EditTaskPage extends StatefulWidget {
   final Task task;
@@ -23,6 +25,8 @@ class _EditTaskPageState extends State<EditTaskPage> {
   late int _notifyBefore;
   late DateTime _selectedDate;
   late String _category;
+  final List<String> _categories = ['even', 'goal', 'birthday', 'other'];
+  late TextEditingController _categoryController;
 
   final TaskController _taskController = Get.find();
 
@@ -40,6 +44,12 @@ class _EditTaskPageState extends State<EditTaskPage> {
     _notifyBefore = t.notifyBefore.isNotEmpty ? t.notifyBefore.first : 5;
     _selectedDate = t.date;
     _category = t.category;
+    _categoryController = TextEditingController();
+
+    // ถ้า category เดิมไม่อยู่ใน default list ให้เพิ่ม
+    if (!_categories.contains(_category)) {
+      _categories.add(_category);
+    }
   }
 
   @override
@@ -192,29 +202,78 @@ class _EditTaskPageState extends State<EditTaskPage> {
                 maxLines: 2,
               ),
               const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
+              DropdownButtonFormField<String>(
+                value: _category,
+                decoration: const InputDecoration(
+                  labelText: 'Category',
+                  border: OutlineInputBorder(),
+                ),
+                isExpanded: true,
+                items: _categories.map((cat) {
+                  return DropdownMenuItem(value: cat, child: Text(cat));
+                }).toList(),
+                onChanged: (val) => setState(() => _category = val ?? 'other'),
+                validator: (val) =>
+                    val == null || val.isEmpty ? 'กรุณาเลือกหมวดหมู่' : null,
+                menuMaxHeight: 200,
+              ),
+              const SizedBox(height: 8),
+              Row(
                 children: [
-                  Chip(label: Text('even')),
-                  Chip(label: Text('goal')),
-                  Chip(label: Text('birthday')),
-                  ActionChip(
-                    label: const Text('+ Add Category'),
-                    onPressed: () {},
+                  Expanded(
+                    child: TextFormField(
+                      controller: _categoryController,
+                      decoration: const InputDecoration(
+                        labelText: 'เพิ่ม Category ใหม่',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      final newCat = _categoryController.text.trim();
+                      if (newCat.isNotEmpty && !_categories.contains(newCat)) {
+                        setState(() {
+                          _categories.add(newCat);
+                          _category = newCat;
+                          _categoryController.clear();
+                        });
+                      }
+                    },
+                    child: const Text('เพิ่ม'),
                   ),
                 ],
               ),
+
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () async {
                     if (!_formKey.currentState!.validate()) return;
+
+                    // ตรวจสอบเวลาว่า startTime < endTime (ถ้าไม่ได้เลือก All Day)
+                    if (!_isAllDay && _startTime != null && _endTime != null) {
+                      final startMinutes =
+                          _startTime!.hour * 60 + _startTime!.minute;
+                      final endMinutes = _endTime!.hour * 60 + _endTime!.minute;
+                      if (startMinutes >= endMinutes) {
+                        showTopSnackBar(
+                          Overlay.of(context),
+                          const CustomSnackBar.error(
+                            message: 'End time must be after start time',
+                          ),
+                        );
+                        return;
+                      }
+                    }
+
                     final updatedTask = Task(
                       id: widget.task.id,
                       userId: widget.task.userId,
-                      title: _titleController.text,
-                      description: _descController.text,
+                      title: _titleController.text.trim(),
+                      description: _descController.text.trim(),
                       category: _category,
                       date: _selectedDate,
                       startTime: _startTime,
@@ -225,8 +284,21 @@ class _EditTaskPageState extends State<EditTaskPage> {
                       isDone: widget.task.isDone,
                       type: _selectedType,
                     );
+
                     await _taskController.updateTask(updatedTask);
-                    if (mounted) Navigator.pop(context);
+
+                    if (mounted) {
+                      showTopSnackBar(
+                        Overlay.of(context),
+                        const CustomSnackBar.success(
+                          message: 'Task updated successfully',
+                        ),
+                      );
+
+                      // รอสักครู่ก่อนปิดหน้า
+                      await Future.delayed(const Duration(milliseconds: 800));
+                      if (mounted) Navigator.pop(context);
+                    }
                   },
                   child: const Text('Save Changes'),
                 ),
