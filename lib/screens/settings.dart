@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../components/drawer.dart';
 import '../controllers/auth_controller.dart';
-import '../controllers/NotificationController.dart';  // Import NotificationController แยก
+import '../controllers/notificationController.dart';  // Import NotificationController แยก
 import '../services/universal_storage_service.dart';
 import '../model/user_model.dart';
 

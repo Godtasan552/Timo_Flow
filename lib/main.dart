@@ -6,7 +6,7 @@ import 'routes/app_routes.dart';
 import 'controllers/task_controller.dart';
 import 'controllers/auth_controller.dart';
 import 'package:timezone/data/latest.dart' as tz;
-import 'controllers/NotificationController.dart';
+import 'controllers/notificationController.dart';
 
 
 void main() {
