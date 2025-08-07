@@ -15,6 +15,7 @@ class Task {
   final List<int> notifyBefore;
   final bool focusMode;
   final bool isDone;
+  final DateTime? completedDate; // เพิ่ม field สำหรับวันที่ complete
   final TaskType type;
 
   Task({
@@ -30,6 +31,7 @@ class Task {
     this.notifyBefore = const [],
     this.focusMode = false,
     this.isDone = false,
+    this.completedDate, // เพิ่มใน constructor
     required this.type,
   });
 
@@ -39,7 +41,6 @@ class Task {
     title: json['title'],
     description: json['description'],
     category: json['category'],
-
     date: DateTime.parse(json['date']),
     startTime: json['startTime'] != null
         ? TimeOfDay(
@@ -58,6 +59,9 @@ class Task {
         (json['notifyBefore'] as List?)?.map((e) => e as int).toList() ?? [],
     focusMode: json['focusMode'] ?? false,
     isDone: json['isDone'] ?? false,
+    completedDate: json['completedDate'] != null
+        ? DateTime.parse(json['completedDate'])
+        : null, // เพิ่มใน fromJson
     type: TaskType.values.firstWhere(
       (e) => e.toString() == 'TaskType.${json['type']}',
       orElse: () => TaskType.even,
@@ -79,8 +83,10 @@ class Task {
     'notifyBefore': notifyBefore,
     'focusMode': focusMode,
     'isDone': isDone,
+    'completedDate': completedDate?.toIso8601String(), // เพิ่มใน toJson
     'type': type.name,
   };
+
   Task copyWith({
     String? id,
     String? userId,
@@ -94,6 +100,8 @@ class Task {
     List<int>? notifyBefore,
     bool? focusMode,
     bool? isDone,
+    DateTime? completedDate,
+    bool clearCompletedDate = false, // เพิ่ม flag สำหรับเคลียร์ completedDate
     TaskType? type,
   }) {
     return Task(
@@ -109,6 +117,9 @@ class Task {
       notifyBefore: notifyBefore ?? this.notifyBefore,
       focusMode: focusMode ?? this.focusMode,
       isDone: isDone ?? this.isDone,
+      completedDate: clearCompletedDate
+          ? null
+          : (completedDate ?? this.completedDate),
       type: type ?? this.type,
     );
   }

@@ -25,6 +25,51 @@ class _ToggleScreenState extends State<ToggleScreen> {
     }
   }
 
+  // แสดง confirmation dialog ก่อน complete all
+  void _showCompleteAllConfirmation() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.done_all, color: Colors.green),
+              SizedBox(width: 8),
+              Text('Complete All Tasks'),
+            ],
+          ),
+          content: const Text(
+            'Are you sure you want to complete all unfinished goal tasks?',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _markAllDone();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Complete All'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _markAllDone() {
     final userId = authController.currentUser.value?.id;
     if (userId == null) return;
@@ -36,40 +81,20 @@ class _ToggleScreenState extends State<ToggleScreen> {
         .toList();
 
     for (var task in goalTasks) {
-      final updatedTask = Task(
-        id: task.id,
-        userId: task.userId,
-        title: task.title,
-        description: task.description,
-        category: task.category,
-        date: task.date,
-        startTime: task.startTime,
-        endTime: task.endTime,
-        isAllDay: task.isAllDay,
-        notifyBefore: task.notifyBefore,
-        focusMode: task.focusMode,
+      final updatedTask = task.copyWith(
         isDone: true,
-        type: task.type,
+        completedDate: DateTime.now(),
       );
       taskController.updateTask(updatedTask);
     }
   }
 
   void _toggleTaskDone(Task task) {
-    final updatedTask = Task(
-      id: task.id,
-      userId: task.userId,
-      title: task.title,
-      description: task.description,
-      category: task.category,
-      date: task.date,
-      startTime: task.startTime,
-      endTime: task.endTime,
-      isAllDay: task.isAllDay,
-      notifyBefore: task.notifyBefore,
-      focusMode: task.focusMode,
+    final updatedTask = task.copyWith(
       isDone: !task.isDone,
-      type: task.type,
+      completedDate: !task.isDone ? DateTime.now() : null,
+      clearCompletedDate:
+          task.isDone, // ถ้า task เป็น done อยู่แล้ว จะเคลียร์ completedDate
     );
     taskController.updateTask(updatedTask);
   }
@@ -120,7 +145,9 @@ class _ToggleScreenState extends State<ToggleScreen> {
             return Container(
               margin: const EdgeInsets.only(right: 8),
               child: ElevatedButton.icon(
-                onPressed: hasUnfinishedTasks ? _markAllDone : null,
+                onPressed: hasUnfinishedTasks
+                    ? _showCompleteAllConfirmation
+                    : null,
                 icon: const Icon(Icons.done_all, size: 18),
                 label: const Text(
                   'Complete All',
@@ -294,6 +321,41 @@ class _ToggleScreenState extends State<ToggleScreen> {
                   ),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
+                ),
+              ],
+
+              // Completed Date (if task is done)
+              if (task.isDone && task.completedDate != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.check_circle,
+                        size: 16,
+                        color: Colors.green.shade600,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Completed: ${_formatDate(task.completedDate!)}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
 
