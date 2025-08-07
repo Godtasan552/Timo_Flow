@@ -6,6 +6,8 @@ import '../screens/login.dart';
 import '../screens/regis.dart';
 import '../screens/forget_pass.dart';
 import '../screens/home.dart';
+import '../screens/search.dart';
+import '../screens/toggle.dart';
 
 class AppPages {
   AppPages._();
@@ -60,5 +62,18 @@ class AppPages {
       transitionDuration: const Duration(milliseconds: 300),
     ),
     */
+
+    GetPage(
+      name: AppRoutes.SEARCH,
+      page: () => const SearchScreen(),
+      transition: Transition.zoom,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
+    GetPage(
+      name: AppRoutes.TOGGLE,
+      page: () => const ToggleScreen(),
+      transition: Transition.zoom,
+      transitionDuration: const Duration(milliseconds: 300),
+    ),
   ];
 }

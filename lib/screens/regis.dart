@@ -69,6 +69,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildInputField({
+    
     required String label,
     required TextEditingController controller,
     required String? Function(String?) validator,
@@ -99,6 +100,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
           child: TextFormField(
+            key: ValueKey(label),
             controller: controller,
             obscureText: obscureText,
             keyboardType: keyboardType,
@@ -210,6 +212,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                       // Email Field
                       _buildInputField(
+                        
                         label: 'EMAIL ADDRESS',
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
@@ -228,6 +231,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                       // Username Field (combining first and last name for username)
                       _buildInputField(
+                        
                         label: 'Username',
                         controller: _usernameController,
                         validator: (value) {
