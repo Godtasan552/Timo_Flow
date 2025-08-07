@@ -5,11 +5,17 @@ import 'routes/app_pages.dart';
 import 'routes/app_routes.dart';
 import 'controllers/task_controller.dart';
 import 'controllers/auth_controller.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'controllers/NotificationController.dart';
+
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   Get.put(AuthController());
   Get.put(TaskController());
+  tz.initializeTimeZones(); 
+  Get.put(AuthController());
+  Get.put(NotificationController()); 
   runApp(const MainApp());
 }
 
@@ -47,6 +53,7 @@ class MainApp extends StatelessWidget {
                   SizedBox(height: 8),
                   Text('The page you are looking for does not exist.'),
                 ],
+                
               ),
             ),
           ),

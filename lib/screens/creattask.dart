@@ -5,6 +5,7 @@ import '../controllers/task_controller.dart';
 import '../controllers/auth_controller.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+import '../controllers/NotificationController.dart';
 
 class CreatTaskPage extends StatefulWidget {
   final TaskType? initialType;
@@ -18,6 +19,7 @@ class _CreatTaskPageState extends State<CreatTaskPage> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
+  final NotificationController notificationController = Get.find();
   TaskType? _selectedType;
   bool _isAllDay = false;
   bool _focusMode = false;
@@ -58,34 +60,28 @@ class _CreatTaskPageState extends State<CreatTaskPage> {
   }
 
   @override
-  void _scheduleNotification() async {
-    if (_notifyBefore > 0 && _selectedDate != null) {
+  Future<void> _scheduleNotification(Task task) async {
+    if (_notifyBefore > 0 && task.date != null) {
       DateTime notificationTime;
-
-      if (_startTime != null) {
-        // ถ้ามี start time ให้แจ้งเตือนก่อน start time
+      
+      if (task.startTime != null) {
         notificationTime = DateTime(
-          _selectedDate!.year,
-          _selectedDate!.month,
-          _selectedDate!.day,
-          _startTime!.hour,
-          _startTime!.minute,
+          task.date!.year,
+          task.date!.month,
+          task.date!.day,
+          task.startTime!.hour,
+          task.startTime!.minute,
         ).subtract(Duration(minutes: _notifyBefore));
       } else {
-        // ถ้าไม่มี start time ให้แจ้งเตือนก่อนวันที่
-        notificationTime = _selectedDate!.subtract(
-          Duration(minutes: _notifyBefore),
-        );
+        notificationTime = task.date!.subtract(Duration(minutes: _notifyBefore));
       }
-
-      // ตรวจสอบว่าเวลาแจ้งเตือนยังไม่ผ่านไป
-      if (notificationTime.isAfter(DateTime.now())) {
-        print('Notification scheduled for: $notificationTime');
-        print('Task: ${_titleController.text}');
-
-        // TODO: เชื่อมต่อกับ notification service จริง
-        // เช่น flutter_local_notifications หรือ firebase_messaging
-      }
+      
+      await notificationController.scheduleTaskNotification(
+        id: int.parse(task.id),
+        title: 'Task Reminder: ${task.title}',
+        body: task.description ?? 'You have an upcoming task',
+        scheduledTime: notificationTime,
+      );
     }
   }
 
@@ -469,6 +465,7 @@ class _CreatTaskPageState extends State<CreatTaskPage> {
                           );
 
                           await _taskController.addTask(task);
+                          await _scheduleNotification(task);
 
                           if (mounted) {
                             showTopSnackBar(

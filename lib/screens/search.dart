@@ -141,9 +141,9 @@ class _SearchScreenState extends State<SearchScreen> {
                           subtitle: Text(DateFormat('dd MMM yyyy')
                               .format(task.date)
                               .toString()),
-                          trailing: task.isDone
-                              ? const Icon(Icons.check_circle, color: Colors.green)
-                              : null,
+                          // trailing: task.isDone
+                          //     ? const Icon(Icons.check_circle, color: Colors.green)
+                          //     : null,
                           onTap: () async {
                             await Get.to(() => TaskDetail(task: task));
                             await loadTasks(); // โหลดใหม่หลังกลับมา

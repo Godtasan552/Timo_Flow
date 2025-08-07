@@ -6,22 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 
-class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
-      body: const Center(
-        child: Text('Settings Page'),
-      ),
-    );
-  }
-}
-
 class NotificationController extends GetxController {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -130,12 +114,6 @@ class NotificationController extends GetxController {
   // Public method to toggle notifications
   void toggleNotifications() {
     notificationsEnabled.value = !notificationsEnabled.value;
-  }
-
-  // Public method to save notification setting
-  Future<void> saveNotificationSetting(bool enabled) async {
-    notificationsEnabled.value = enabled;
-    await _saveNotificationSetting(enabled);
   }
 
   Future<bool> scheduleTaskNotification({
