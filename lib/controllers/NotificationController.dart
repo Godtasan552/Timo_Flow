@@ -1,3 +1,5 @@
+// สร้างไฟล์ใหม่: controllers/notification_controller.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
@@ -58,7 +60,6 @@ class NotificationController extends GetxController {
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
-      // ลบ onDidReceiveLocalNotification ออกเพราะ deprecated
     );
 
     const initSettings = InitializationSettings(
@@ -72,13 +73,10 @@ class NotificationController extends GetxController {
     );
   }
 
-  // Handle notification tap
   void _onNotificationTap(NotificationResponse response) {
     final payload = response.payload;
     if (payload != null) {
-      // Handle notification tap - navigate to specific screen
       print('Notification tapped with payload: $payload');
-      // You can use Get.toNamed() here to navigate
     }
   }
 
@@ -86,7 +84,6 @@ class NotificationController extends GetxController {
     final status = await Permission.notification.request();
     permissionStatus.value = status.toString();
     
-    // For Android 13+, also request exact alarm permission if needed
     if (GetPlatform.isAndroid) {
       await Permission.scheduleExactAlarm.request();
     }
@@ -111,9 +108,13 @@ class NotificationController extends GetxController {
     }
   }
 
-  // Public method to toggle notifications
   void toggleNotifications() {
     notificationsEnabled.value = !notificationsEnabled.value;
+  }
+
+  Future<void> saveNotificationSetting(bool enabled) async {
+    notificationsEnabled.value = enabled;
+    await _saveNotificationSetting(enabled);
   }
 
   Future<bool> scheduleTaskNotification({
@@ -124,19 +125,16 @@ class NotificationController extends GetxController {
     String? payload,
     String? sound,
   }) async {
-    // Check if notifications are enabled
     if (!notificationsEnabled.value) {
       print('Notifications are disabled');
       return false;
     }
 
-    // Check if controller is initialized
     if (!isInitialized.value) {
       print('NotificationController not initialized');
       return false;
     }
 
-    // Validate scheduled time
     if (scheduledTime.isBefore(DateTime.now())) {
       print('Scheduled time is in the past');
       return false;
@@ -153,7 +151,6 @@ class NotificationController extends GetxController {
         sound: sound != null ? RawResourceAndroidNotificationSound(sound) : null,
         enableVibration: true,
         enableLights: true,
-        // แก้ไข ledColor ให้ใช้ Color.fromARGB หรือ Colors
         ledColor: const Color.fromARGB(255, 33, 150, 243),
         ledOnMs: 1000,
         ledOffMs: 500,
@@ -180,10 +177,7 @@ class NotificationController extends GetxController {
         tzDateTime,
         notificationDetails,
         payload: payload,
-        // แก้ไข parameter name
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        // ลบ uiLocalNotificationDateInterpretation และ matchDateTimeComponents
-        // เพราะเป็น deprecated parameters
       );
 
       print('Notification scheduled for: ${tzDateTime.toString()}');
@@ -195,7 +189,6 @@ class NotificationController extends GetxController {
     }
   }
 
-  // Schedule notification with reminder options
   Future<List<bool>> scheduleTaskWithReminders({
     required int baseId,
     required String title,
@@ -263,7 +256,6 @@ class NotificationController extends GetxController {
     }
   }
 
-  // Get pending notifications
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     try {
       return await _notificationsPlugin.pendingNotificationRequests();
@@ -273,13 +265,11 @@ class NotificationController extends GetxController {
     }
   }
 
-  // Check if notifications are allowed
   Future<bool> areNotificationsAllowed() async {
     final status = await Permission.notification.status;
     return status.isGranted;
   }
 
-  // Request notification permissions if denied
   Future<bool> requestNotificationPermissions() async {
     if (await areNotificationsAllowed()) return true;
     
@@ -291,7 +281,6 @@ class NotificationController extends GetxController {
 
   @override
   void onClose() {
-    // Clean up resources if needed
     super.onClose();
   }
 }

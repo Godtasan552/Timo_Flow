@@ -15,6 +15,7 @@ void main() {
   Get.put(TaskController());
   tz.initializeTimeZones(); 
   Get.put(AuthController());
+  // ใน main.dart หรือที่เหมาะสม
   Get.put(NotificationController()); 
   runApp(const MainApp());
 }
