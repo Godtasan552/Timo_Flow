@@ -39,6 +39,7 @@ class Task {
     title: json['title'],
     description: json['description'],
     category: json['category'],
+
     date: DateTime.parse(json['date']),
     startTime: json['startTime'] != null
         ? TimeOfDay(
@@ -53,7 +54,8 @@ class Task {
           )
         : null,
     isAllDay: json['isAllDay'] ?? false,
-    notifyBefore: (json['notifyBefore'] as List?)?.map((e) => e as int).toList() ?? [],
+    notifyBefore:
+        (json['notifyBefore'] as List?)?.map((e) => e as int).toList() ?? [],
     focusMode: json['focusMode'] ?? false,
     isDone: json['isDone'] ?? false,
     type: TaskType.values.firstWhere(
@@ -69,7 +71,9 @@ class Task {
     'description': description,
     'category': category,
     'date': date.toIso8601String(),
-    'startTime': startTime != null ? '${startTime!.hour}:${startTime!.minute}' : null,
+    'startTime': startTime != null
+        ? '${startTime!.hour}:${startTime!.minute}'
+        : null,
     'endTime': endTime != null ? '${endTime!.hour}:${endTime!.minute}' : null,
     'isAllDay': isAllDay,
     'notifyBefore': notifyBefore,
