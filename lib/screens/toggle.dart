@@ -70,7 +70,7 @@ class _ToggleScreenState extends State<ToggleScreen> {
     );
   }
 
-  void _markAllDone() {
+  void _markAllDone() async {
     final userId = authController.currentUser.value?.id;
     if (userId == null) return;
 
@@ -85,7 +85,7 @@ class _ToggleScreenState extends State<ToggleScreen> {
         isDone: true,
         completedDate: DateTime.now(),
       );
-      taskController.updateTask(updatedTask);
+      await taskController.updateTask(updatedTask);
     }
   }
 
