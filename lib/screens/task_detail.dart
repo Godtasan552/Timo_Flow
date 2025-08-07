@@ -1,15 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../model/tasks_model.dart';
-import '../services/storage_service_mobile.dart';
 import 'dart:async';
-import 'package:get/get.dart';
-import 'edit_task.dart';
-import '../controllers/task_controller.dart';
-import '../screens/search.dart';
-import '../screens/toggle.dart';
-import 'package:top_snackbar_flutter/top_snack_bar.dart';
-import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 
 class TaskDetail extends StatefulWidget {
   final Task task;
@@ -21,48 +13,15 @@ class TaskDetail extends StatefulWidget {
 }
 
 class _TaskDetailState extends State<TaskDetail> {
-  Widget _buildTag(String label, Color bgColor, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: textColor,
-          fontWeight: FontWeight.w600,
-          fontSize: 13,
-        ),
-      ),
-    );
-  }
-
   late Duration remainingTime;
   Timer? timer;
-  final TaskController _taskController = Get.find<TaskController>();
-
-  // เก็บ task ที่อัพเดตแล้ว
-  Task get currentTask {
-    // หา task ล่าสุดจาก controller
-    final updatedTask = _taskController.tasks.firstWhere(
-      (task) => task.id == widget.task.id,
-      orElse: () => widget.task, // ถ้าไม่เจอให้ใช้ตัวเดิม
-    );
-    return updatedTask;
-  }
 
   @override
   void initState() {
     super.initState();
-    _startCountdownIfNeeded();
-  }
-
-  void _startCountdownIfNeeded() {
-    if (currentTask.focusMode == true &&
-        currentTask.startTime != null &&
-        currentTask.endTime != null) {
+    if (widget.task.focusMode == true &&
+        widget.task.startTime != null &&
+        widget.task.endTime != null) {
       _startCountdown();
     }
   }
@@ -75,8 +34,8 @@ class _TaskDetailState extends State<TaskDetail> {
       now.year,
       now.month,
       now.day,
-      currentTask.endTime!.hour,
-      currentTask.endTime!.minute,
+      widget.task.endTime!.hour,
+      widget.task.endTime!.minute,
     );
 
     // ถ้าเวลาสิ้นสุดน้อยกว่าปัจจุบัน (ข้ามวัน)
@@ -107,40 +66,16 @@ class _TaskDetailState extends State<TaskDetail> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Task Detail',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-        ),
-        centerTitle: true, // ✅ ทำให้หัวตรงกลาง
-        backgroundColor: const Color(0xFFADBFFF),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SearchScreen()),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.check_box),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ToggleScreen()),
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
+    final dateText = DateFormat('EEEE, MMMM d, yyyy').format(widget.task.date!);
+    final timeRange =
+        widget.task.startTime != null && widget.task.endTime != null
+        ? '${widget.task.startTime!.hour.toString().padLeft(2, '0')}:${widget.task.startTime!.minute.toString().padLeft(2, '0')}-${widget.task.endTime!.hour.toString().padLeft(2, '0')}:${widget.task.endTime!.minute.toString().padLeft(2, '0')}'
+        : 'No time';
 
+    return Scaffold(
       body: Container(
         width: double.infinity,
-        height: double.infinity,
+        height: double.infinity, // เพิ่มให้เต็มความสูง
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFFF5DDFF), Color(0xFFFFE1E0), Color(0xFFFFBDBD)],
@@ -150,271 +85,301 @@ class _TaskDetailState extends State<TaskDetail> {
         ),
         child: SafeArea(
           child: Column(
+            // เปลี่ยนจาก Padding + SingleChildScrollView เป็น Column
             children: [
-              // Main content - ใช้ Obx เพื่อฟังการเปลี่ยนแปลง
-              Expanded(
-                child: Obx(() {
-                  final task = currentTask; // ได้ task ที่อัพเดตล่าสุด
-                  final dateText = DateFormat(
-                    'EEEE, MMMM d, yyyy',
-                  ).format(task.date);
-                  final timeRange =
-                      task.startTime != null && task.endTime != null
-                      ? '${task.startTime!.hour.toString().padLeft(2, '0')}:${task.startTime!.minute.toString().padLeft(2, '0')}-${task.endTime!.hour.toString().padLeft(2, '0')}:${task.endTime!.minute.toString().padLeft(2, '0')}'
-                      : 'No time';
+              // Header with back button
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios, size: 24),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    const Expanded(
+                      child: Text(
+                        'task detail',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 40), // เพื่อให้ title อยู่กลาง
+                  ],
+                ),
+              ),
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        // Main Card
-                        Expanded(
-                          child: Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.only(bottom: 20),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
+              // Main content
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    children: [
+                      // Main Card
+                      Expanded(
+                        child: Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Type Tag and Time Row
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFE3F2FD),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        widget.task.type.name,
+                                        style: const TextStyle(
+                                          color: Color(0xFF1976D2),
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      timeRange,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(20),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Type Tag and Time Row
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Row(
+                                const SizedBox(height: 20),
+
+                                // Title
+                                Text(
+                                  widget.task.title,
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Description Label
+                                const Text(
+                                  'DESCRIPTION',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+
+                                // Description
+                                Text(
+                                  widget.task.description ?? 'No description',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    height: 1.4,
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+
+                                // Focus Mode Warning
+                                if (widget.task.focusMode == true)
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                    child: const Text(
+                                      'ขณะนี้การล็อกอินเอง',
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+
+                                if (widget.task.focusMode == true)
+                                  const Text(
+                                    'เพราะ Focus mode',
+                                    style: TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+
+                                const Spacer(),
+
+                                // Date
+                                Text(
+                                  dateText,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+
+                                // Focus Mode Timer
+                                if (widget.task.focusMode == true)
+                                  Center(
+                                    child: Container(
+                                      padding: const EdgeInsets.all(20),
+                                      decoration: BoxDecoration(
+                                        color: Colors.black,
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Column(
                                         children: [
-                                          _buildTag(
-                                            task.type.name,
-                                            const Color(0xFFE3F2FD),
-                                            const Color(0xFF1976D2),
+                                          const Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.access_time,
+                                                color: Colors.white,
+                                                size: 20,
+                                              ),
+                                              SizedBox(width: 8),
+                                              Text(
+                                                '3h',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(width: 8),
-                                          _buildTag(
-                                            task.category,
-                                            const Color(0xFFFFF3E0),
-                                            const Color(0xFFEF6C00),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            formatDuration(remainingTime),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 36,
+                                              fontWeight: FontWeight.bold,
+                                              fontFamily: 'Courier',
+                                            ),
                                           ),
                                         ],
                                       ),
-                                      Text(
-                                        timeRange,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-
-                                  const SizedBox(height: 20),
-
-                                  // Title
-                                  Text(
-                                    task.title,
-                                    style: const TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  const SizedBox(height: 16),
-
-                                  // Description Label
-                                  const Text(
-                                    'DESCRIPTION',
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      letterSpacing: 1,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-
-                                  // Description
-                                  Text(
-                                    task.description ?? 'No description',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      height: 1.4,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20),
-
-                                  // Focus Mode Warning
-                                  if (task.focusMode == true)
-                                    Column(
-                                      children: [
-                                        remainingTime > Duration.zero
-                                            ? const Text("Focus Mode is active")
-                                            : const Text(
-                                                "Focus Mode Completed",
-                                              ),
-                                        Center(
-                                          child: Container(
-                                            padding: const EdgeInsets.all(16),
-                                            decoration: BoxDecoration(
-                                              color: Colors.red[100],
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                if (remainingTime >
-                                                    Duration.zero)
-                                                  Text(
-                                                    formatDuration(
-                                                      remainingTime,
-                                                    ),
-                                                    style: const TextStyle(
-                                                      fontSize: 24,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  )
-                                                else
-                                                  const Text(
-                                                    "Time is over!",
-                                                    style: TextStyle(
-                                                      fontSize: 24,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Colors.red,
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                  const Spacer(),
-
-                                  // Date
-                                  Text(
-                                    dateText,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                ],
-                              ),
+                              ],
                             ),
                           ),
                         ),
+                      ),
 
-                        // Bottom Buttons
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                height: 50,
-                                child: 
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFFFE0B2),
-                                    foregroundColor: const Color(0xFF5D4037),
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(25),
-                                    ),
+                      // Bottom Buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              height: 50,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFFFE0B2),
+                                  foregroundColor: const Color(0xFF5D4037),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(25),
                                   ),
-                                  onPressed: () async {
-                                    // รอให้หน้า Edit เสร็จแล้วอัพเดต countdown
-                                    await Get.to(
-                                      () => EditTaskPage(task: task),
-                                    );
-
-                                    // หยุด timer เก่าและเริ่มใหม่หากจำเป็น
-                                    timer?.cancel();
-                                    _startCountdownIfNeeded();
-                                  },
-                                  child: const Text(
-                                    'Edit Task',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16,
-                                    ),
+                                ),
+                                onPressed: () {
+                                  // TODO: Edit logic
+                                },
+                                child: const Text(
+                                  'Edit Task',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Container(
-                                height: 50,
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFFFCDD2),
-                                    foregroundColor: const Color(0xFFD32F2F),
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(25),
-                                    ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Container(
+                              height: 50,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFFFCDD2),
+                                  foregroundColor: const Color(0xFFD32F2F),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(25),
                                   ),
-                                  onPressed: () {
-                                    _showDeleteConfirmDialog();
-                                  },
-                                  child: const Text(
-                                    'delete task',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16,
-                                    ),
+                                ),
+                                onPressed: () {
+                                  _showDeleteConfirmDialog();
+                                },
+                                child: const Text(
+                                  'delete task',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
                                   ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Container(
-                                height: 50,
-                                child: 
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFC8E6C9),
-                                    foregroundColor: const Color(0xFF2E7D32),
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(25),
-                                    ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Container(
+                              height: 50,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFC8E6C9),
+                                  foregroundColor: const Color(0xFF2E7D32),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(25),
                                   ),
-                                  onPressed: () {
-                                    // TODO: Mark done logic
-                                    Navigator.pop(context);
-                                  },
-                                  child: const Text(
-                                    'task done',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16,
-                                    ),
+                                ),
+                                onPressed: () {
+                                  // TODO: Mark done logic
+                                },
+                                child: const Text(
+                                  'task done',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
                                   ),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                      ],
-                    ),
-                  );
-                }),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -436,13 +401,13 @@ class _TaskDetailState extends State<TaskDetail> {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
           content: Text(
-            'Are you sure you want to delete "${currentTask.title}"? This action cannot be undone.',
+            'Are you sure you want to delete "${widget.task.title}"? This action cannot be undone.',
             style: const TextStyle(fontSize: 16),
           ),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // ปิด dialog
               },
               child: const Text(
                 'Cancel',
@@ -454,8 +419,8 @@ class _TaskDetailState extends State<TaskDetail> {
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop();
-                _deleteTask();
+                Navigator.of(context).pop(); // ปิด dialog
+                _deleteTask(); // เรียกฟังก์ชันลบ task
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFD32F2F),
@@ -477,70 +442,71 @@ class _TaskDetailState extends State<TaskDetail> {
 
   void _deleteTask() async {
     try {
-      _taskController.deleteTaskById(currentTask.id);
+      // TODO: เพิ่ม API call หรือ database operation เพื่อลบ task จริง
+      // ตัวอย่าง:
+      // await TaskService.deleteTask(widget.task.id);
+      // หรือ
 
+      // แสดง Snackbar แจ้งเตือนการลบสำเร็จ
       if (mounted) {
-        showTopSnackBar(
-          Overlay.of(context),
-          CustomSnackBar.success(
-            message: 'Task "${currentTask.title}" deleted successfully',
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Task "${widget.task.title}" deleted successfully',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF4CAF50),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
           ),
         );
 
+        // กลับไปหน้าก่อนหน้าหลังจากแสดง Snackbar
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
-            Navigator.of(context).pop();
+            Navigator.of(context).pop(); // กลับไปหน้าก่อนหน้า
           }
         });
       }
     } catch (error) {
+      // แสดง error message หากการลบไม่สำเร็จ
       if (mounted) {
-        showTopSnackBar(
-          Overlay.of(context),
-          const CustomSnackBar.error(
-            message: 'Failed to delete task. Please try again.',
-          ),
-        );
-      }
-    }
-  }
-
-  void _markTaskDone() async {
-    try {
-      final updatedTask = Task(
-        id: currentTask.id,
-        userId: currentTask.userId,
-        title: currentTask.title,
-        description: currentTask.description,
-        category: currentTask.category,
-        date: currentTask.date,
-        startTime: currentTask.startTime,
-        endTime: currentTask.endTime,
-        isAllDay: currentTask.isAllDay,
-        notifyBefore: currentTask.notifyBefore,
-        focusMode: currentTask.focusMode,
-        isDone: true, // เปลี่ยนสถานะเป็น done
-        type: currentTask.type,
-      );
-
-      await _taskController.updateTask(updatedTask);
-
-      if (mounted) {
-        showTopSnackBar(
-          Overlay.of(context),
-          const CustomSnackBar.success(message: 'Task marked as done'),
-        );
-
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) Navigator.of(context).pop();
-        });
-      }
-    } catch (error) {
-      if (mounted) {
-        showTopSnackBar(
-          Overlay.of(context),
-          const CustomSnackBar.error(
-            message: 'Failed to mark task as done. Please try again.',
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white, size: 20),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Failed to delete task. Please try again.',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFD32F2F),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
           ),
         );
       }

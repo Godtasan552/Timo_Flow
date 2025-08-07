@@ -15,6 +15,7 @@ class Task {
   final List<int> notifyBefore;
   final bool focusMode;
   final bool isDone;
+  final DateTime? completedDate; // เพิ่ม field สำหรับวันที่ complete
   final TaskType type;
 
   Task({
@@ -30,6 +31,7 @@ class Task {
     this.notifyBefore = const [],
     this.focusMode = false,
     this.isDone = false,
+    this.completedDate, // เพิ่มใน constructor
     required this.type,
   });
 
@@ -53,9 +55,13 @@ class Task {
           )
         : null,
     isAllDay: json['isAllDay'] ?? false,
-    notifyBefore: (json['notifyBefore'] as List?)?.map((e) => e as int).toList() ?? [],
+    notifyBefore:
+        (json['notifyBefore'] as List?)?.map((e) => e as int).toList() ?? [],
     focusMode: json['focusMode'] ?? false,
     isDone: json['isDone'] ?? false,
+    completedDate: json['completedDate'] != null
+        ? DateTime.parse(json['completedDate'])
+        : null, // เพิ่มใน fromJson
     type: TaskType.values.firstWhere(
       (e) => e.toString() == 'TaskType.${json['type']}',
       orElse: () => TaskType.even,
@@ -69,12 +75,52 @@ class Task {
     'description': description,
     'category': category,
     'date': date.toIso8601String(),
-    'startTime': startTime != null ? '${startTime!.hour}:${startTime!.minute}' : null,
+    'startTime': startTime != null
+        ? '${startTime!.hour}:${startTime!.minute}'
+        : null,
     'endTime': endTime != null ? '${endTime!.hour}:${endTime!.minute}' : null,
     'isAllDay': isAllDay,
     'notifyBefore': notifyBefore,
     'focusMode': focusMode,
     'isDone': isDone,
+    'completedDate': completedDate?.toIso8601String(), // เพิ่มใน toJson
     'type': type.name,
   };
+
+  Task copyWith({
+    String? id,
+    String? userId,
+    String? title,
+    String? description,
+    String? category,
+    DateTime? date,
+    TimeOfDay? startTime,
+    TimeOfDay? endTime,
+    bool? isAllDay,
+    List<int>? notifyBefore,
+    bool? focusMode,
+    bool? isDone,
+    DateTime? completedDate,
+    bool clearCompletedDate = false, // เพิ่ม flag สำหรับเคลียร์ completedDate
+    TaskType? type,
+  }) {
+    return Task(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      date: date ?? this.date,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      isAllDay: isAllDay ?? this.isAllDay,
+      notifyBefore: notifyBefore ?? this.notifyBefore,
+      focusMode: focusMode ?? this.focusMode,
+      isDone: isDone ?? this.isDone,
+      completedDate: clearCompletedDate
+          ? null
+          : (completedDate ?? this.completedDate),
+      type: type ?? this.type,
+    );
+  }
 }
