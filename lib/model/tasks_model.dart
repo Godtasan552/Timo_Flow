@@ -81,4 +81,35 @@ class Task {
     'isDone': isDone,
     'type': type.name,
   };
+  Task copyWith({
+    String? id,
+    String? userId,
+    String? title,
+    String? description,
+    String? category,
+    DateTime? date,
+    TimeOfDay? startTime,
+    TimeOfDay? endTime,
+    bool? isAllDay,
+    List<int>? notifyBefore,
+    bool? focusMode,
+    bool? isDone,
+    TaskType? type,
+  }) {
+    return Task(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      date: date ?? this.date,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      isAllDay: isAllDay ?? this.isAllDay,
+      notifyBefore: notifyBefore ?? this.notifyBefore,
+      focusMode: focusMode ?? this.focusMode,
+      isDone: isDone ?? this.isDone,
+      type: type ?? this.type,
+    );
+  }
 }
