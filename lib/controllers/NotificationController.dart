@@ -1,5 +1,3 @@
-// สร้างไฟล์ใหม่: controllers/notification_controller.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
@@ -7,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
+import 'dart:io';
 
 class NotificationController extends GetxController {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
@@ -42,6 +41,7 @@ class NotificationController extends GetxController {
         _saveNotificationSetting(enabled);
       });
       
+      print('NotificationController initialized successfully');
     } catch (e) {
       print('Error initializing notifications: $e');
       isInitialized.value = false;
@@ -49,43 +49,116 @@ class NotificationController extends GetxController {
   }
 
   Future<void> _initializeTimezone() async {
-    tz_data.initializeTimeZones();
-    tz.setLocalLocation(tz.getLocation('Asia/Bangkok'));
+    try {
+      tz_data.initializeTimeZones();
+      // Try to get Thailand timezone, fallback to UTC if not available
+      try {
+        tz.setLocalLocation(tz.getLocation('Asia/Bangkok'));
+      } catch (e) {
+        print('Thailand timezone not found, using UTC: $e');
+        tz.setLocalLocation(tz.UTC);
+      }
+    } catch (e) {
+      print('Error initializing timezone: $e');
+      tz.setLocalLocation(tz.UTC);
+    }
   }
 
   Future<void> _configureNotificationSettings() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    
-    const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
+    try {
+      const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      
+      const iosSettings = DarwinInitializationSettings(
+        requestAlertPermission: true,
+        requestBadgePermission: true,
+        requestSoundPermission: true,
+        requestCriticalPermission: false,
+      );
+
+      const initSettings = InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      );
+
+      await _notificationsPlugin.initialize(
+        initSettings,
+        onDidReceiveNotificationResponse: _onNotificationTap,
+      );
+
+      // Create notification channel for Android
+      if (Platform.isAndroid) {
+        await _createNotificationChannel();
+      }
+    } catch (e) {
+      print('Error configuring notification settings: $e');
+      throw e;
+    }
+  }
+
+  Future<void> _createNotificationChannel() async {
+    const androidChannel = AndroidNotificationChannel(
+      _taskChannelId,
+      _taskChannelName,
+      description: _taskChannelDescription,
+      importance: Importance.high,
+      enableVibration: true,
+      enableLights: true,
+      ledColor: Color.fromARGB(255, 107, 78, 255),
     );
 
-    const initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
-
-    await _notificationsPlugin.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: _onNotificationTap,
-    );
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(androidChannel);
   }
 
   void _onNotificationTap(NotificationResponse response) {
     final payload = response.payload;
+    print('Notification tapped with payload: $payload');
+    
+    // Navigate to task or perform action based on payload
     if (payload != null) {
-      print('Notification tapped with payload: $payload');
+      if (payload.startsWith('task_')) {
+        final taskId = payload.replaceFirst('task_', '');
+        // Navigate to task detail or home page
+        Get.toNamed('/home'); // or Get.toNamed('/task/$taskId')
+      } else if (payload.startsWith('reminder_')) {
+        final taskId = payload.replaceFirst('reminder_', '');
+        Get.toNamed('/home');
+      }
     }
   }
 
   Future<void> _requestPermissions() async {
-    final status = await Permission.notification.request();
-    permissionStatus.value = status.toString();
-    
-    if (GetPlatform.isAndroid) {
-      await Permission.scheduleExactAlarm.request();
+    try {
+      if (Platform.isAndroid) {
+        // Request notification permission
+        final status = await Permission.notification.request();
+        permissionStatus.value = status.toString();
+        
+        // Request exact alarm permission for Android 12+
+        if (Platform.isAndroid) {
+          try {
+            await Permission.scheduleExactAlarm.request();
+          } catch (e) {
+            print('Schedule exact alarm permission not available: $e');
+          }
+        }
+      } else if (Platform.isIOS) {
+        // For iOS, request permissions through the plugin
+        final granted = await _notificationsPlugin
+            .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+            ?.requestPermissions(
+              alert: true,
+              badge: true,
+              sound: true,
+              critical: false,
+            );
+        
+        permissionStatus.value = granted == true ? 'granted' : 'denied';
+      }
+    } catch (e) {
+      print('Error requesting permissions: $e');
+      permissionStatus.value = 'error';
     }
   }
 
@@ -125,22 +198,36 @@ class NotificationController extends GetxController {
     String? payload,
     String? sound,
   }) async {
-    if (!notificationsEnabled.value) {
-      print('Notifications are disabled');
-      return false;
-    }
-
-    if (!isInitialized.value) {
-      print('NotificationController not initialized');
-      return false;
-    }
-
-    if (scheduledTime.isBefore(DateTime.now())) {
-      print('Scheduled time is in the past');
-      return false;
-    }
-
     try {
+      // Check if notifications are enabled
+      if (!notificationsEnabled.value) {
+        print('Notifications are disabled by user');
+        return false;
+      }
+
+      // Check if controller is initialized
+      if (!isInitialized.value) {
+        print('NotificationController not initialized');
+        await _initializeNotifications();
+        if (!isInitialized.value) {
+          return false;
+        }
+      }
+
+      // Check if scheduled time is in the future
+      if (scheduledTime.isBefore(DateTime.now())) {
+        print('Scheduled time is in the past: $scheduledTime');
+        return false;
+      }
+
+      // Check permissions
+      final hasPermission = await areNotificationsAllowed();
+      if (!hasPermission) {
+        print('Notification permission not granted');
+        return false;
+      }
+
+      // Configure notification details
       final androidDetails = AndroidNotificationDetails(
         _taskChannelId,
         _taskChannelName,
@@ -148,12 +235,15 @@ class NotificationController extends GetxController {
         importance: Importance.high,
         priority: Priority.high,
         icon: '@mipmap/ic_launcher',
-        sound: sound != null ? RawResourceAndroidNotificationSound(sound) : null,
+        color: const Color.fromARGB(255, 107, 78, 255),
         enableVibration: true,
         enableLights: true,
-        ledColor: const Color.fromARGB(255, 33, 150, 243),
+        ledColor: const Color.fromARGB(255, 107, 78, 255),
         ledOnMs: 1000,
         ledOffMs: 500,
+        autoCancel: true,
+        ongoing: false,
+        styleInformation: const BigTextStyleInformation(''),
       );
 
       final iosDetails = DarwinNotificationDetails(
@@ -161,6 +251,7 @@ class NotificationController extends GetxController {
         presentBadge: true,
         presentSound: true,
         sound: sound,
+        interruptionLevel: InterruptionLevel.active,
       );
 
       final notificationDetails = NotificationDetails(
@@ -168,19 +259,25 @@ class NotificationController extends GetxController {
         iOS: iosDetails,
       );
 
+      // Convert to timezone-aware datetime
       final tzDateTime = tz.TZDateTime.from(scheduledTime, tz.local);
       
+      // Schedule the notification
       await _notificationsPlugin.zonedSchedule(
         id,
         title,
         body,
         tzDateTime,
         notificationDetails,
-        payload: payload,
+        payload: payload ?? 'task_$id',
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+
       );
 
-      print('Notification scheduled for: ${tzDateTime.toString()}');
+      print('Notification scheduled successfully for: ${tzDateTime.toString()}');
+      print('Current time: ${DateTime.now()}');
+      print('Time until notification: ${scheduledTime.difference(DateTime.now()).inMinutes} minutes');
+      
       return true;
       
     } catch (e) {
@@ -189,7 +286,67 @@ class NotificationController extends GetxController {
     }
   }
 
-  Future<List<bool>> scheduleTaskWithReminders({
+  Future<bool> scheduleTaskWithTime({
+    required int taskId,
+    required String title,
+    required String description,
+    required DateTime taskDate,
+    TimeOfDay? startTime,
+    int notifyBeforeMinutes = 15,
+  }) async {
+    try {
+      DateTime scheduledTime;
+      
+      if (startTime != null) {
+        // If task has specific start time, schedule notification before it
+        scheduledTime = DateTime(
+          taskDate.year,
+          taskDate.month,
+          taskDate.day,
+          startTime.hour,
+          startTime.minute,
+        ).subtract(Duration(minutes: notifyBeforeMinutes));
+      } else {
+        // If it's an all-day task, schedule for beginning of the day
+        scheduledTime = DateTime(
+          taskDate.year,
+          taskDate.month,
+          taskDate.day,
+          8, 0, // 8:00 AM
+        );
+      }
+
+      // Only schedule if the time is in the future
+      if (scheduledTime.isAfter(DateTime.now())) {
+        String notificationTitle;
+        String notificationBody;
+        
+        if (startTime != null) {
+          notificationTitle = '🔔 Task Reminder: $title';
+          notificationBody = 'Starting in $notifyBeforeMinutes minutes at ${startTime.format(Get.context!)}';
+        } else {
+          notificationTitle = '📅 Today\'s Task: $title';
+          notificationBody = description.isNotEmpty ? description : 'You have a task scheduled for today';
+        }
+
+        return await scheduleTaskNotification(
+          id: taskId,
+          title: notificationTitle,
+          body: notificationBody,
+          scheduledTime: scheduledTime,
+          payload: 'task_$taskId',
+        );
+      } else {
+        print('Task time is in the past, not scheduling notification');
+        return false;
+      }
+    } catch (e) {
+      print('Error scheduling task notification: $e');
+      return false;
+    }
+  }
+
+  Future<List<bool>> scheduleTaskWithMultipleReminders({
     required int baseId,
     required String title,
     required String body,
@@ -211,7 +368,7 @@ class NotificationController extends GetxController {
       
       if (reminders[i].inDays > 0) {
         reminderTitle = '📅 Upcoming: $title';
-        reminderBody = 'Reminder: Task due in ${reminders[i].inDays} day(s)';
+        reminderBody = 'Task due in ${reminders[i].inDays} day(s)';
       } else if (reminders[i].inHours > 0) {
         reminderTitle = '⏰ Reminder: $title';
         reminderBody = 'Task due in ${reminders[i].inHours} hour(s)';
@@ -245,6 +402,24 @@ class NotificationController extends GetxController {
     }
   }
 
+  Future<bool> cancelTaskNotifications(int taskId) async {
+    try {
+      // Cancel main notification
+      await _notificationsPlugin.cancel(taskId);
+      
+      // Cancel reminder notifications (assuming they use taskId + 1, +2, +3)
+      for (int i = 1; i <= 3; i++) {
+        await _notificationsPlugin.cancel(taskId + i);
+      }
+      
+      print('All notifications for task $taskId cancelled');
+      return true;
+    } catch (e) {
+      print('Error cancelling task notifications: $e');
+      return false;
+    }
+  }
+
   Future<bool> cancelAllNotifications() async {
     try {
       await _notificationsPlugin.cancelAll();
@@ -266,17 +441,63 @@ class NotificationController extends GetxController {
   }
 
   Future<bool> areNotificationsAllowed() async {
-    final status = await Permission.notification.status;
-    return status.isGranted;
+    try {
+      if (Platform.isAndroid) {
+        final status = await Permission.notification.status;
+        return status.isGranted;
+      } else if (Platform.isIOS) {
+        final granted = await _notificationsPlugin
+            .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+            ?.requestPermissions(
+              alert: true,
+              badge: true,
+              sound: true,
+            );
+        return granted == true;
+      }
+      return false;
+    } catch (e) {
+      print('Error checking notification permissions: $e');
+      return false;
+    }
   }
 
   Future<bool> requestNotificationPermissions() async {
-    if (await areNotificationsAllowed()) return true;
-    
-    final status = await Permission.notification.request();
-    permissionStatus.value = status.toString();
-    
-    return status.isGranted;
+    try {
+      if (await areNotificationsAllowed()) return true;
+      
+      if (Platform.isAndroid) {
+        final status = await Permission.notification.request();
+        permissionStatus.value = status.toString();
+        return status.isGranted;
+      } else if (Platform.isIOS) {
+        final granted = await _notificationsPlugin
+            .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+            ?.requestPermissions(
+              alert: true,
+              badge: true,
+              sound: true,
+            );
+        permissionStatus.value = granted == true ? 'granted' : 'denied';
+        return granted == true;
+      }
+      
+      return false;
+    } catch (e) {
+      print('Error requesting notification permissions: $e');
+      return false;
+    }
+  }
+
+  // Helper method to schedule immediate test notification
+  Future<bool> scheduleTestNotification({int delaySeconds = 5}) async {
+    return await scheduleTaskNotification(
+      id: 999,
+      title: 'Test Notification 🔔',
+      body: 'This is a test notification. Your notifications are working!',
+      scheduledTime: DateTime.now().add(Duration(seconds: delaySeconds)),
+      payload: 'test_notification',
+    );
   }
 
   @override
