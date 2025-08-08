@@ -271,8 +271,7 @@ class NotificationController extends GetxController {
         notificationDetails,
         payload: payload ?? 'task_$id',
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time,
+
       );
 
       print('Notification scheduled successfully for: ${tzDateTime.toString()}');
