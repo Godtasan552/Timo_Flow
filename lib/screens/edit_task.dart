@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../model/tasks_model.dart';
+import '../controllers/task_controller.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 
 class EditTaskPage extends StatefulWidget {
-  const EditTaskPage({super.key});
+  final Task task;
+  const EditTaskPage({super.key, required this.task});
 
   @override
   State<EditTaskPage> createState() => _EditTaskPageState();

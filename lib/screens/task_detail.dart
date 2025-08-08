@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../model/tasks_model.dart';
+import '../services/storage_service_mobile.dart';
 import 'dart:async';
+import 'package:get/get.dart';
+import 'edit_task.dart';
+import '../controllers/task_controller.dart';
+import '../screens/search.dart';
+import '../screens/toggle.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 
 class TaskDetail extends StatefulWidget {
   final Task task;
@@ -59,8 +67,8 @@ class _TaskDetailState extends State<TaskDetail> with TickerProviderStateMixin {
       now.year,
       now.month,
       now.day,
-      widget.task.endTime!.hour,
-      widget.task.endTime!.minute,
+      currentTask.endTime!.hour,
+      currentTask.endTime!.minute,
     );
 
     if (endDateTime.isBefore(now)) {
@@ -632,8 +640,8 @@ class _TaskDetailState extends State<TaskDetail> with TickerProviderStateMixin {
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop(); // ปิด dialog
-                _deleteTask(); // เรียกฟังก์ชันลบ task
+                Navigator.of(context).pop();
+                _deleteTask();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFD32F2F),
@@ -656,47 +664,21 @@ class _TaskDetailState extends State<TaskDetail> with TickerProviderStateMixin {
 
   void _deleteTask() async {
     try {
-      // TODO: เพิ่ม API call หรือ database operation เพื่อลบ task จริง
-      // ตัวอย่าง:
-      // await TaskService.deleteTask(widget.task.id);
-      // หรือ
+      _taskController.deleteTaskById(currentTask.id);
 
-      // แสดง Snackbar แจ้งเตือนการลบสำเร็จ
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Task "${widget.task.title}" deleted successfully',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: const Color(0xFF4CAF50),
-            duration: const Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
+        showTopSnackBar(
+          Overlay.of(context),
+          CustomSnackBar.success(
+            message: 'Task "${currentTask.title}" deleted successfully',
           ),
         );
 
-        // กลับไปหน้าก่อนหน้าหลังจากแสดง Snackbar
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) Navigator.of(context).pop();
         });
       }
     } catch (error) {
-      // แสดง error message หากการลบไม่สำเร็จ
       if (mounted) {
         showTopSnackBar(
           Overlay.of(context),
