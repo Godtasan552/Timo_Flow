@@ -49,33 +49,6 @@ class TaskController extends GetxController {
     }
   }
 
-  Future<void> _removeExpiredCompletedTasks(
-    List<Task> allTasks,
-    String userId,
-  ) async {
-    final now = DateTime.now();
-    final tasksToRemove = <Task>[];
-
-    for (var task in allTasks) {
-      if (task.userId == userId &&
-          task.isDone &&
-          task.completedDate != null &&
-          task.type == TaskType.goal) {
-        final daysSinceCompleted = now.difference(task.completedDate!).inDays;
-        if (daysSinceCompleted >= 7) {
-          tasksToRemove.add(task);
-        }
-      }
-    }
-
-    if (tasksToRemove.isNotEmpty) {
-      for (var taskToRemove in tasksToRemove) {
-        allTasks.removeWhere((t) => t.id == taskToRemove.id);
-      }
-      await StorageService.saveTasks(allTasks);
-    }
-  }
-
   Future<void> addTask(Task task) async {
     final allTasks = await StorageService.loadTasks();
     allTasks.add(task);
