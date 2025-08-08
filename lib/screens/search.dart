@@ -16,6 +16,9 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   List<Task> allTasks = [];
   List<Task> filteredTasks = [];
+  List<String> availableCategories = [];
+
+  String? selectedCategory;
 
   final TextEditingController searchController = TextEditingController();
   DateTime? selectedDate;
@@ -37,32 +40,36 @@ class _SearchScreenState extends State<SearchScreen> {
   Future<void> loadTasks() async {
     final tasks = await StorageService.loadTasks();
     tasks.sort((a, b) => a.date.compareTo(b.date));
+    
+    // Extract unique categories
+    final categories = tasks.map((task) => task.category).toSet().toList();
+    categories.sort();
+    
     setState(() {
       allTasks = tasks;
       filteredTasks = tasks;
+      availableCategories = categories;
     });
   }
 
   void filterTasks() {
     String query = searchController.text.toLowerCase().trim();
     setState(() {
-      if (query.isEmpty) {
-        filteredTasks = [];
-      } else {
-        filteredTasks = allTasks.where((task) {
-          final matchesText =
-              task.title.toLowerCase().contains(query) ||
-              (task.description?.toLowerCase().contains(query) ?? false);
+      filteredTasks = allTasks.where((task) {
+        final matchesText =
+            task.title.toLowerCase().contains(query) ||
+            (task.description?.toLowerCase().contains(query) ?? false);
 
-          final matchesDate =
-              selectedDate == null ||
-              (task.date.year == selectedDate!.year &&
-                  task.date.month == selectedDate!.month &&
-                  task.date.day == selectedDate!.day);
+        final matchesDate = selectedDate == null ||
+            (task.date.year == selectedDate!.year &&
+                task.date.month == selectedDate!.month &&
+                task.date.day == selectedDate!.day);
 
-          return matchesText && matchesDate;
-        }).toList();
-      }
+        final matchesCategory =
+            selectedCategory == null || task.category == selectedCategory;
+
+        return matchesText && matchesDate && matchesCategory;
+      }).toList();
     });
   }
 
@@ -101,6 +108,98 @@ class _SearchScreenState extends State<SearchScreen> {
     filterTasks();
   }
 
+  void pickCategory() async {
+    final picked = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Select Category',
+            style: TextStyle(
+              color: Color(0xFF6B4EFF),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          backgroundColor: cardPastel,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          content: availableCategories.isEmpty
+              ? const Text(
+                  'No categories available',
+                  style: TextStyle(color: Color(0xFF9E9E9E)),
+                )
+              : SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: availableCategories.map((category) {
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: InkWell(
+                          onTap: () => Navigator.pop(context, category),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: selectedCategory == category
+                                  ? primaryPastel
+                                  : const Color(0xFFFAFAFA),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: selectedCategory == category
+                                    ? const Color(0xFF6B4EFF)
+                                    : const Color(0xFFE0E0E0),
+                              ),
+                            ),
+                            child: Text(
+                              category,
+                              style: TextStyle(
+                                color: selectedCategory == category
+                                    ? const Color(0xFF6B4EFF)
+                                    : const Color(0xFF333333),
+                                fontWeight: selectedCategory == category
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Color(0xFF9E9E9E)),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        selectedCategory = picked;
+      });
+      filterTasks();
+    }
+  }
+
+  void clearCategory() {
+    setState(() {
+      selectedCategory = null;
+    });
+    filterTasks();
+  }
+
   Color _getTaskTypeColor(TaskType type, bool isBackground) {
     switch (type) {
       case TaskType.even:
@@ -116,7 +215,6 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundPastel,
-      // ใน SearchScreen - AppBar ที่ปรับปรุงแล้ว
       appBar: AppBar(
         backgroundColor: primaryPastel,
         elevation: 0,
@@ -185,10 +283,39 @@ class _SearchScreenState extends State<SearchScreen> {
               splashRadius: 20,
             ),
           ),
+          // Category Filter Button
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            decoration: BoxDecoration(
+              color: selectedCategory != null
+                  ? const Color(0xFF6B4EFF)
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.category,
+                color: selectedCategory != null
+                    ? Colors.white
+                    : const Color(0xFF6B4EFF),
+                size: 22,
+              ),
+              onPressed: pickCategory,
+              padding: EdgeInsets.zero,
+              splashRadius: 20,
+            ),
+          ),
           // Clear Date Button
           if (selectedDate != null)
             Container(
-              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+              margin: const EdgeInsets.symmetric(vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -273,45 +400,92 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                     onChanged: (_) => filterTasks(),
                   ),
-                  if (selectedDate != null) ...[
+                  // Filter Tags Row
+                  if (selectedDate != null || selectedCategory != null) ...[
                     const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: primaryPastel,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.calendar_today,
-                            color: Color(0xFF6B4EFF),
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            "Filter: ${DateFormat('dd/MM/yyyy').format(selectedDate!)}",
-                            style: const TextStyle(
-                              color: Color(0xFF6B4EFF),
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        if (selectedDate != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: primaryPastel,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.calendar_today,
+                                  color: Color(0xFF6B4EFF),
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  DateFormat('dd/MM/yyyy').format(selectedDate!),
+                                  style: const TextStyle(
+                                    color: Color(0xFF6B4EFF),
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                InkWell(
+                                  onTap: clearDate,
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: Color(0xFF6B4EFF),
+                                    size: 16,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          InkWell(
-                            onTap: clearDate,
-                            child: const Icon(
-                              Icons.close,
-                              color: Color(0xFF6B4EFF),
-                              size: 16,
+                        if (selectedCategory != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: accentBlue,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.category,
+                                  color: Color(0xFF0288D1),
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  selectedCategory!,
+                                  style: const TextStyle(
+                                    color: Color(0xFF0288D1),
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                InkWell(
+                                  onTap: clearCategory,
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: Color(0xFF0288D1),
+                                    size: 16,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
+                      ],
                     ),
                   ],
                 ],
@@ -333,7 +507,9 @@ class _SearchScreenState extends State<SearchScreen> {
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
-                            searchController.text.isEmpty
+                            searchController.text.isEmpty &&
+                                    selectedDate == null &&
+                                    selectedCategory == null
                                 ? Icons.search
                                 : Icons.search_off,
                             size: 64,
@@ -342,8 +518,10 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          searchController.text.isEmpty
-                              ? 'Start typing to search'
+                          searchController.text.isEmpty &&
+                                  selectedDate == null &&
+                                  selectedCategory == null
+                              ? 'Start searching or filtering'
                               : 'No tasks found',
                           style: const TextStyle(
                             fontSize: 18,
@@ -353,9 +531,11 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          searchController.text.isEmpty
-                              ? 'Enter task title or description'
-                              : 'Try a different search term',
+                          searchController.text.isEmpty &&
+                                  selectedDate == null &&
+                                  selectedCategory == null
+                              ? 'Use search or filter buttons'
+                              : 'Try different search terms or filters',
                           style: const TextStyle(
                             fontSize: 14,
                             color: Color(0xFFBDBDBD),
