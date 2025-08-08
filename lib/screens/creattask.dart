@@ -5,7 +5,7 @@ import '../controllers/task_controller.dart';
 import '../controllers/auth_controller.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
-import '../controllers/NotificationController.dart';
+import '../controllers/notificationController.dart';
 
 class CreatTaskPage extends StatefulWidget {
   final TaskType? initialType;
